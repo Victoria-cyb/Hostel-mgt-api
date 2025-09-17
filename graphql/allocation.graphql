@@ -1,0 +1,52 @@
+enum allocation_status {
+  reserved
+  active
+  holiday_leave
+  checked_out
+}
+
+# ========== ALLOCATION ==========
+type Allocation {
+  id: ID!
+  allocationNumber: String!
+  student: User!
+  bed: Bed!
+  status: allocation_status!
+  startDate: String
+  endDate: String
+  stayType: StayType
+  academicSession: String
+  academicTerm: String
+  checkInDate: String
+  checkOutDate: String
+  application: Application!
+  payments: [Payment!]!
+  createdBy: allocation_source!
+  createdAt: String!
+}
+
+# ========== INPUTS ==========
+input AllocationFilter {
+  studentId: ID
+  startDate: String
+  endDate: String
+  stayTypeId: ID
+  hostelId: ID
+  roomId: ID
+  bedId: ID
+  allocationNumber: String
+}
+
+# ========== ALLOCATION QUERIES ==========
+extend type Query {
+  allocations(filter: AllocationFilter): [Allocation!]!
+  allocation(id: ID!): Allocation
+}
+
+# ========== ALLOCATION MUTATIONS ==========
+extend type Mutation {
+  adminBulkAllocate(inputs: [ApplyInput!]!): [Allocation!]!
+  checkIn(allocationId: ID!): Boolean!
+  checkOut(allocationId: ID!): Boolean!
+  markLeave(allocationId: ID!, reason: String!, signOutDate: String!, expectedReturn: String!): Allocation!
+}

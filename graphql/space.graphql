@@ -1,0 +1,94 @@
+enum spaceRole {
+  admin
+  student
+  parent
+}
+
+enum status {
+  active
+  inactive
+}
+
+type PublicSpace {
+  id: ID!
+  name: String!
+  hostels: [PublicHostel!]!
+}
+
+type Space {
+  id: ID!
+  name: String!
+  createdAt: String!
+  hostels: [Hostel!]!
+  users: [SpaceUser!]!
+  stayTypes: [StayType!]!
+  classes: [Class!]!
+  createdBy: SimpleUser!
+  createdById: ID!
+}
+
+type SimpleUser {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String
+}
+
+type SimpleSpaceInfo {
+  id: ID!
+  name: String!
+}
+
+type SpaceUser {
+  id: ID!
+  user: User!
+  role: spaceRole!
+  class: Class
+  parent: User
+  space: SimpleSpaceInfo
+  applications: [Application!]!
+  allocations: [Allocation!]!
+  createdAt: String!
+}
+
+type Class {
+  id: ID!
+  space: Space!
+  name: String!
+  createdAt: String!
+  username: String!
+}
+
+input CreateSpaceUserInput {
+  role: spaceRole!
+  name: String
+  firstName: String
+  lastName: String
+  email: String
+  password: String!
+  phone: String
+  gender: Gender
+  image: String
+  classId: ID
+  parentId: ID
+}
+
+input CreateSpaceInput {
+  name: String!
+}
+
+extend type Query {
+  spaces: [Space!]!
+  publicSpaces: [PublicSpace!]!
+  space(id: ID!): Space
+  publicSpace(id: ID!): PublicSpace
+  classes(spaceId: ID!): [Class!]!
+  class(id: ID!): Class
+}
+
+extend type Mutation {
+  createSpace(input: CreateSpaceInput!): Space!
+  createSpaceUser(input: CreateSpaceUserInput!, spaceId: ID!): SpaceUser!
+  linkParentToStudent(parentId: ID!, studentId: ID!): Boolean!
+  createClass(spaceId: ID!, name: String!): Class!
+}

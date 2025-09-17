@@ -1,0 +1,91 @@
+enum application_status {
+  pending
+  approved
+  rejected
+}
+
+enum allocation_source {
+  admin
+  parent
+  student
+}
+
+enum payment_status {
+  pending
+  paid
+}
+
+# ========== APPLICATION ==========
+type Application {
+  id: ID!
+  applicationNumber: String!
+  student: User!
+  bed: Bed!
+  status: application_status!
+  amount: Float!
+  currency: String!
+  startDate: String
+  endDate: String
+  stayType: StayType
+  academicSession: String
+  academicTerm: String
+  payments: [Payment!]!
+  createdBy: allocation_source!
+  createdAt: String!
+}
+
+# ========== PAYMENTS ==========
+type Payment {
+  id: ID!
+  application: Application
+  allocation: Allocation
+  reference: String!
+  amount: Float!
+  currency: String!
+  status: payment_status!
+  method: String
+  createdAt: String!
+}
+
+# ========== INPUTS ==========
+input ApplyInput {
+  studentId: ID!
+  bedId: ID!
+  startDate: String
+  endDate: String
+  stayTypeId: ID
+  amount: Float!
+  currency: String!
+  academicSession: String
+  academicTerm: String
+}
+
+input ApplicationFilter {
+  studentId: ID
+  startDate: String
+  endDate: String
+  stayTypeId: ID
+  hostelId: ID
+  roomId: ID
+  bedId: ID
+  applicationNumber: String
+}
+
+# ========== APPLICATION QUERIES ==========
+extend type Query {
+  applications(filter: ApplicationFilter): [Application!]!
+  application(id: ID!): Application
+  payments(applicationNumber: String, allocationNumber: String): [Payment!]!
+  payment(id: ID!): Payment
+}
+
+# ========== APPLICATION MUTATIONS ==========
+extend type Mutation {
+  studentBook(input: ApplyInput!): Application!
+  parentBulkBook(inputs: [ApplyInput!]!): [Application!]!
+  approveApplication(applicationId: ID!): Allocation!
+
+  payHostelFee(applicationNumber: String!): Payment!
+  recordPayment(applicationNumber: String!, status: payment_status!): Payment!
+  verifyPayment(reference: String!): Boolean!
+}

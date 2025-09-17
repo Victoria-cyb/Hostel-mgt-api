@@ -1,0 +1,350 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+enum Role {
+  user
+  cit_admin
+}
+
+enum SpaceRole {
+  admin
+  student
+  parent
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum Status {
+  active
+  inactive
+}
+
+enum BedStatus {
+  available
+  reserved
+  occupied
+  inactive
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum AllocationStatus {
+  reserved
+  active
+  holiday_leave
+  checked_out
+}
+
+enum AllocationSource {
+  admin
+  parent
+  student
+}
+
+enum PaymentStatus {
+  pending
+  paid
+}
+
+// ========== BASE ENTITIES ==========
+model Space {
+  id        String      @id @default(uuid())
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  spaceUsers SpaceUser[] // join table to users
+  hostels    Hostel[]
+  stayTypes  StayType[]
+  classes    Class[]
+
+  createdById String
+  createdBy   User @relation(fields: [createdById], references: [id])
+
+  @@map("spaces")
+}
+
+model Hostel {
+  id        String   @id @default(uuid())
+  name      String
+  gender    Gender
+  location  String?
+  status    Status   @default(active)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  // Relations
+  rooms Room[]
+
+  @@index([spaceId])
+  @@index([status])
+  @@index([gender])
+  @@map("hostels")
+}
+
+model Room {
+  id       String  @id @default(uuid())
+  label    String
+  capacity Int
+  price    Int?
+  status   Status  @default(active)
+
+  // Foreign Keys
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  // Relations
+  beds Bed[]
+
+  @@index([hostelId])
+  @@index([status])
+  @@map("rooms")
+}
+
+model Bed {
+  id     String    @id @default(uuid())
+  label  String
+  status BedStatus @default(available)
+  amount Int
+
+  // Foreign Keys
+  roomId  String
+  room    Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  classId String?
+  class   Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  // Relations
+  applications     Application[]
+  allocations      Allocation[]
+  currentAllocation Allocation?  @relation("CurrentBedAllocation")
+
+  @@index([roomId])
+  @@index([status])
+  @@index([classId])
+  @@map("beds")
+}
+
+model StayType {
+  id        String   @id @default(uuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+
+  // Foreign Keys
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  // Relations
+  applications Application[]
+  allocations  Allocation[]
+
+  @@index([spaceId])
+  @@index([startDate, endDate])
+  @@map("stay_types")
+}
+
+model Class {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Keys
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  // Relations
+  spaceUsers SpaceUser[]
+  beds       Bed[]
+
+  @@index([spaceId])
+  @@map("classes")
+}
+
+model SpaceUser {
+  id       String      @id @default(uuid())
+  role     SpaceRole
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Foreign Keys
+  userId    String
+  user      User       @relation(fields: [userId], references: [id])
+
+  spaceId   String
+  space     Space      @relation(fields: [spaceId], references: [id])
+
+  classId   String?
+  class     Class?     @relation(fields: [classId], references: [id])
+
+  parentId  String?
+  parent    User?      @relation("ParentStudent", fields: [parentId], references: [id])
+
+  // Relations
+  applications Application[] @relation("SpaceUserApplications")
+  allocations  Allocation[]  @relation("SpaceUserAllocations")
+
+  @@unique([userId, spaceId])
+  @@index([spaceId])
+  @@index([role])
+  @@index([classId])
+  @@index([parentId])
+  @@map("space_users")
+}
+
+// ========== USERS ==========
+model User {
+  id        String      @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String?     @unique
+  phone     String?
+  gender    Gender?
+  image     String?
+  username  String      @unique
+  password  String?
+  role      Role        @default(user)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  spaceUsers       SpaceUser[]         // join table to spaces
+  allocations      Allocation[]
+  applications     Application[]
+  spaces           Space[]
+  spaceUserStudents SpaceUser[] @relation("ParentStudent") // for parent-student relation
+
+  @@map("users")
+  @@index([email])
+  @@index([username])
+}
+
+// ========== APPLICATION ==========
+model Application {
+  id                String            @id @default(uuid())
+  applicationNumber String            @unique @default(uuid())
+  status            ApplicationStatus @default(pending)
+  amount            Float
+  currency          String
+  startDate         DateTime?
+  endDate           DateTime?
+  academicSession   String?
+  academicTerm      String?
+  createdBy         AllocationSource
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Foreign Keys
+  studentId    String
+  student      User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  bedId        String
+  bed          Bed       @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  stayTypeId   String?
+  stayType     StayType? @relation(fields: [stayTypeId], references: [id], onDelete: SetNull)
+  spaceUserId  String?
+  spaceUser    SpaceUser? @relation("SpaceUserApplications", fields: [spaceUserId], references: [id], onDelete: SetNull)
+
+  // Relations
+  payments    Payment[]
+  allocations Allocation[]
+
+  @@index([studentId])
+  @@index([bedId])
+  @@index([status])
+  @@index([applicationNumber])
+  @@index([createdAt])
+  @@index([stayTypeId])
+  @@index([spaceUserId])
+  @@map("applications")
+}
+
+// ========== ALLOCATION / BOOKING ==========
+model Allocation {
+  id               String           @id @default(uuid())
+  allocationNumber String           @unique @default(uuid())
+  status           AllocationStatus @default(reserved)
+  startDate        DateTime?
+  endDate          DateTime?
+  academicSession  String?
+  academicTerm     String?
+  checkInDate      DateTime?
+  checkOutDate     DateTime?
+  createdBy        AllocationSource
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Foreign Keys
+  studentId     String
+  student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  bedId         String
+  bed           Bed         @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  currentBedId  String?     @unique
+  currentBed    Bed?        @relation("CurrentBedAllocation", fields: [currentBedId], references: [id], onDelete: SetNull)
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  stayTypeId    String?
+  stayType      StayType?   @relation(fields: [stayTypeId], references: [id], onDelete: SetNull)
+  spaceUserId   String?
+  spaceUser     SpaceUser?  @relation("SpaceUserAllocations", fields: [spaceUserId], references: [id], onDelete: SetNull)
+
+  // Relations
+  payments Payment[]
+
+  @@index([studentId])
+  @@index([bedId])
+  @@index([status])
+  @@index([allocationNumber])
+  @@index([applicationId])
+  @@index([createdAt])
+  @@index([stayTypeId])
+  @@index([spaceUserId])
+  @@map("allocations")
+}
+
+// ========== PAYMENTS ==========
+model Payment {
+  id        String        @id @default(uuid())
+  reference String        @unique @default(uuid())
+  amount    Float
+  currency  String
+  status    PaymentStatus @default(pending)
+  method    String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Foreign Keys
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  allocationId  String?
+  allocation    Allocation?  @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([allocationId])
+  @@index([reference])
+  @@index([status])
+  @@index([createdAt])
+  @@map("payments")
+}

@@ -1,0 +1,51 @@
+enum Role {
+  user
+  cit_admin
+}
+
+enum Gender {
+  male
+  female
+}
+
+# ========== USERS ==========
+type User {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String
+  phone: String
+  gender: Gender
+  image: String
+  username: String!
+  spaces: [Space!]!
+}
+
+# ========== AUTH PAYLOAD ==========
+type AuthPayload {
+  token: String!
+}
+
+# ========== USER QUERIES ==========
+type Query {
+  users(spaceId: ID!): [SpaceUser!]!
+  user: User! @auth
+}
+
+input CreateUserInput {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  phone: String
+}
+
+# ========== USER MUTATIONS ==========
+type Mutation {
+  signup(input: CreateUserInput!): AuthPayload!
+  login(identifier: String!, password: String!): AuthPayload!
+  forgotPassword(email: String!): String!
+  verifyOtp(email: String!, otp: String!): Boolean!
+  resetPassword(email: String!, otp: String!, newPassword: String!): Boolean!
+  changePassword(oldPassword: String!, newPassword: String!): Boolean!
+}

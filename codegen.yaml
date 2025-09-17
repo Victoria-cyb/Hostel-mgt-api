@@ -1,0 +1,21 @@
+# This configuration file tells GraphQL Code Generator how
+# to generate types based on our schema.
+schema: "./graphql"
+generates:
+  ./src/graphql/types/graphql.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+      useTypeImports: true
+      # Disable features that cause import issues in v6
+      skipTypename: true
+      # Override the default resolver signature
+      defaultMapper: Partial<{T}>
+      # Explicitly control imports
+      mappers: {}
+      # These settings work better with v6
+      enumsAsEnum: true
+      # add context_type
+      contextType: "../../types/index#ContextProps"

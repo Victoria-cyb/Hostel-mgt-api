@@ -1,0 +1,129 @@
+enum bed_status {
+  available
+  reserved
+  occupied
+  inactive
+}
+
+# ========== PUBLIC TYPES ==========
+
+type PublicHostel {
+  id: ID!
+  name: String!
+  gender: Gender!
+  location: String
+  status: status!
+  roomCount: Int!
+  availableBeds: Int!
+}
+
+# ========== BASE ENTITIES ==========
+
+type Hostel {
+  id: ID!
+  space: Space!
+  name: String!
+  gender: Gender!
+  location: String
+  status: status!
+  rooms: [Room!]!
+  createdAt: String!
+}
+
+type Room {
+  id: ID!
+  hostel: Hostel!
+  label: String!
+  capacity: Int!
+  price: Int
+  status: status!
+  beds: [Bed!]!
+}
+
+type Bed {
+  id: ID!
+  room: Room!
+  label: String!
+  status: bed_status!
+  class: Class
+  amount: Int!
+  currentAllocation: Allocation
+}
+
+type StayType {
+  id: ID!
+  space: Space!
+  name: String!
+  startDate: String!
+  endDate: String!
+}
+
+# ========== INPUTS ==========
+input BedInput {
+  label: String!
+  status: bed_status
+  classId: ID
+  amount: Int!
+}
+
+input RoomInput {
+  label: String!
+  capacity: Int!
+  price: Int
+  status: status
+  beds: [BedInput!]
+}
+
+input HostelInput {
+  name: String!
+  gender: Gender!
+  location: String
+  status: status
+  rooms: [RoomInput!]
+}
+
+input UpdateHostelInput {
+  name: String
+  gender: Gender
+  location: String
+  status: status
+}
+
+input UpdateRoomInput {
+  label: String
+  capacity: Int
+  price: Int
+  status: status
+}
+
+input UpdateBedInput {
+  label: String
+  status: bed_status
+  classId: ID
+  amount: Int
+}
+
+# ========== HOSTEL QUERIES ==========
+extend type Query {
+  hostels(spaceId: ID!): [Hostel!]!
+  publicHostels(spaceId: ID!): [PublicHostel!]!
+  hostel(id: ID!): Hostel
+  publicHostel(id: ID!): PublicHostel
+  rooms(hostelId: ID!): [Room!]!
+  room(id: ID!): Room
+  beds(roomId: ID!): [Bed!]!
+  bed(id: ID!): Bed
+  stayTypes(spaceId: ID!): [StayType!]!
+  stayType(id: ID!): StayType
+}
+
+# ========== HOSTEL MUTATIONS ==========
+extend type Mutation {
+  createHostel(spaceId: ID!, input: HostelInput!): Hostel!
+  createRoom(hostelId: ID!, input: RoomInput!): Room!
+  createBed(roomId: ID!, input: BedInput!): Bed!
+  updateHostel(id: ID!, input: UpdateHostelInput!): Hostel!
+  updateRoom(id: ID!, input: UpdateRoomInput!): Room!
+  updateBed(id: ID!, input: UpdateBedInput!): Bed!
+  createStayType(spaceId: ID!, name: String!, startDate: String!, endDate: String!): StayType!
+}
