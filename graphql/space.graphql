@@ -1,7 +1,9 @@
-enum spaceRole {
+scalar DateTime
+
+enum SpaceRole {
   admin
   student
-  parent
+  parent 
 }
 
 enum status {
@@ -18,7 +20,8 @@ type PublicSpace {
 type Space {
   id: ID!
   name: String!
-  createdAt: String!
+  createdAt: DateTime!
+  updatedAt: DateTime
   hostels: [Hostel!]!
   users: [SpaceUser!]!
   stayTypes: [StayType!]!
@@ -42,35 +45,34 @@ type SimpleSpaceInfo {
 type SpaceUser {
   id: ID!
   user: User!
-  role: spaceRole!
-  class: Class
-  parent: User
-  space: SimpleSpaceInfo
-  applications: [Application!]!
-  allocations: [Allocation!]!
-  createdAt: String!
+  role: String!
+  space: SimpleSpaceInfo!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+
 }
 
 type Class {
   id: ID!
-  space: Space!
+  space: Space
   name: String!
   createdAt: String!
-  username: String!
+
+
 }
 
 input CreateSpaceUserInput {
-  role: spaceRole!
-  name: String
-  firstName: String
-  lastName: String
+  role: String!
+  firstName: String!
+  lastName: String!
   email: String
   password: String!
   phone: String
-  gender: Gender
+  gender: Gender!
   image: String
   classId: ID
   parentId: ID
+  studentId: [ID]
 }
 
 input CreateSpaceInput {
@@ -78,17 +80,17 @@ input CreateSpaceInput {
 }
 
 extend type Query {
-  spaces: [Space!]!
-  publicSpaces: [PublicSpace!]!
-  space(id: ID!): Space
-  publicSpace(id: ID!): PublicSpace
+  spaces: [Space!]! @auth
+  publicSpaces: [PublicSpace!]! @auth
+  space(id: ID!): Space @auth
+  publicSpace(id: ID!): PublicSpace @auth
   classes(spaceId: ID!): [Class!]!
   class(id: ID!): Class
 }
 
 extend type Mutation {
   createSpace(input: CreateSpaceInput!): Space!
-  createSpaceUser(input: CreateSpaceUserInput!, spaceId: ID!): SpaceUser!
-  linkParentToStudent(parentId: ID!, studentId: ID!): Boolean!
-  createClass(spaceId: ID!, name: String!): Class!
+  createSpaceUser(input: CreateSpaceUserInput!, spaceId: ID!): SpaceUser! @auth   @spaceAuth(requires: [admin])
+  linkParentToStudent(spaceId: ID!, parentId: ID!, studentId: ID!): Boolean! @auth   @spaceAuth(requires: [admin])
+  createClass(spaceId: ID!, name: String!): Class! @auth   @spaceAuth(requires: [admin])
 }

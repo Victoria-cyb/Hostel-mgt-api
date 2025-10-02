@@ -1,4 +1,4 @@
-enum allocation_status {
+enum AllocationStatus {
   reserved
   active
   holiday_leave
@@ -9,9 +9,9 @@ enum allocation_status {
 type Allocation {
   id: ID!
   allocationNumber: String!
-  student: User!
-  bed: Bed!
-  status: allocation_status!
+  student: User
+  bed: Bed
+  status: AllocationStatus!
   startDate: String
   endDate: String
   stayType: StayType
@@ -19,9 +19,9 @@ type Allocation {
   academicTerm: String
   checkInDate: String
   checkOutDate: String
-  application: Application!
-  payments: [Payment!]!
-  createdBy: allocation_source!
+  application: Application
+  payments: [Payment!]
+  createdBy: AllocationSource!
   createdAt: String!
 }
 
@@ -39,14 +39,14 @@ input AllocationFilter {
 
 # ========== ALLOCATION QUERIES ==========
 extend type Query {
-  allocations(filter: AllocationFilter): [Allocation!]!
-  allocation(id: ID!): Allocation
+  allocations(filter: AllocationFilter, spaceId: ID!): [Allocation!]! @auth @spaceAuth(requires: [admin])
+  allocation(id: ID!, spaceId: ID!): Allocation @auth @spaceAuth(requires: [admin])
 }
 
 # ========== ALLOCATION MUTATIONS ==========
 extend type Mutation {
-  adminBulkAllocate(inputs: [ApplyInput!]!): [Allocation!]!
-  checkIn(allocationId: ID!): Boolean!
-  checkOut(allocationId: ID!): Boolean!
-  markLeave(allocationId: ID!, reason: String!, signOutDate: String!, expectedReturn: String!): Allocation!
+  adminBulkAllocate(inputs: [ApplyInput!]!, spaceId: ID!): [Allocation!]! @auth @spaceAuth(requires: [admin])
+  checkIn(allocationId: ID!, spaceId: ID!): Boolean! @auth @spaceAuth(requires: [admin, student])
+  checkOut(allocationId: ID!, spaceId: ID!): Boolean! @auth @spaceAuth(requires: [admin, student])
+  markLeave(allocationId: ID!, reason: String!, signOutDate: String!, expectedReturn: String!, spaceId: ID!): Allocation! @auth @spaceAuth(requires: [admin, student])
 }

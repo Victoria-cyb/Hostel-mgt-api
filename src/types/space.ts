@@ -27,6 +27,9 @@ export interface Space {
   id: string;
   name: string;
   createdAt: string;
+  updatedAt?: string;
+  createdById: string;
+  createdBy: SimpleUser;
   hostels: Hostel[];
   users: SpaceUser[];
   stayTypes: StayType[];
@@ -42,33 +45,42 @@ export interface SpaceUser {
   id: string;
   user: User;
   space: SimpleSpaceInfo;
-  role: SpaceRole;
+  role: String;
+  student?: TypeOrNull<SpaceUser[]>;
   parent?: TypeOrNull<User>;
   class?: TypeOrNull<Class>;
   applications: Application[];
   allocations: Allocation[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Class {
   id: string;
-  space: Space;
+  space?: Space;
   name: string;
   createdAt: string;
 }
 
+export interface SimpleUser {
+  id: string
+  firstName: string
+  lastName: string
+  email?: string
+}
+
 export interface CreateSpaceUserInput {
-    role: SpaceRole;
-    name?: TypeOrNull<string>;
-    firstName?: TypeOrNull<string>;
-    lastName?: TypeOrNull<string>;
+    role: String;
+    firstName: string;
+    lastName: string;
     email?: TypeOrNull<string>;
     password: string;
     phone?: TypeOrNull<string>;
-    gender?: TypeOrNull<Gender>;
+    gender: Gender;
     image?: TypeOrNull<string>;
     classId?: TypeOrNull<string>;
-    parentId?: TypeOrNull<string>;
+    parentId?: string | null;
+    studentId?: (string | null)[] | null;
   }
 
 export interface CreateSpaceInput {

@@ -17,5 +17,9 @@ generates:
       mappers: {}
       # These settings work better with v6
       enumsAsEnum: true
+      config:
+    enumsAsTypes: true
+    
+
       # add context_type
-      contextType: "../../types/index#ContextProps"
+    contextType: "../../types/index#ContextProps"

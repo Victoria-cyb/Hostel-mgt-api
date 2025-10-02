@@ -91,6 +91,8 @@ model Hostel {
   status    Status   @default(active)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  roomCount     Int
+  availableBeds Int
 
   // Foreign Keys
   spaceId String
@@ -201,7 +203,8 @@ model SpaceUser {
   class     Class?     @relation(fields: [classId], references: [id])
 
   parentId  String?
-  parent    User?      @relation("ParentStudent", fields: [parentId], references: [id])
+   parent   SpaceUser?  @relation("ParentStudent", fields: [parentId], references: [id])
+   students SpaceUser[] @relation("ParentStudent")
 
   // Relations
   applications Application[] @relation("SpaceUserApplications")
@@ -227,6 +230,8 @@ model User {
   username  String      @unique
   password  String?
   role      Role        @default(user)
+  resetOtp  String?
+resetOtpExpiry DateTime?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
@@ -235,7 +240,7 @@ model User {
   allocations      Allocation[]
   applications     Application[]
   spaces           Space[]
-  spaceUserStudents SpaceUser[] @relation("ParentStudent") // for parent-student relation
+ 
 
   @@map("users")
   @@index([email])
@@ -292,6 +297,8 @@ model Allocation {
   academicTerm     String?
   checkInDate      DateTime?
   checkOutDate     DateTime?
+  leaveReason      String?
+  expectedReturn   DateTime?
   createdBy        AllocationSource
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt

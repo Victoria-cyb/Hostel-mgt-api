@@ -1,5 +1,4 @@
-import type { GraphQLResolveInfo } from 'graphql';
-import type { ContextProps } from '../../types/index';
+import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -15,25 +14,27 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Date: { input: any; output: any; }
+  DateTime: { input: any; output: any; }
 };
 
 export type Allocation = {
   academicSession?: Maybe<Scalars['String']['output']>;
   academicTerm?: Maybe<Scalars['String']['output']>;
   allocationNumber: Scalars['String']['output'];
-  application: Application;
-  bed: Bed;
+  application?: Maybe<Application>;
+  bed?: Maybe<Bed>;
   checkInDate?: Maybe<Scalars['String']['output']>;
   checkOutDate?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
-  createdBy: Allocation_Source;
+  createdBy: AllocationSource;
   endDate?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  payments: Array<Payment>;
+  payments?: Maybe<Array<Payment>>;
   startDate?: Maybe<Scalars['String']['output']>;
-  status: Allocation_Status;
+  status: AllocationStatus;
   stayType?: Maybe<StayType>;
-  student: User;
+  student?: Maybe<User>;
 };
 
 export type AllocationFilter = {
@@ -47,22 +48,38 @@ export type AllocationFilter = {
   studentId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+export enum AllocationSource {
+  Admin = 'admin',
+  Parent = 'parent',
+  Student = 'student'
+}
+
+export enum AllocationStatus {
+  Active = 'active',
+  CheckedOut = 'checked_out',
+  HolidayLeave = 'holiday_leave',
+  Reserved = 'reserved'
+}
+
 export type Application = {
   academicSession?: Maybe<Scalars['String']['output']>;
   academicTerm?: Maybe<Scalars['String']['output']>;
+  allocations: Array<Allocation>;
   amount: Scalars['Float']['output'];
   applicationNumber: Scalars['String']['output'];
-  bed: Bed;
+  bed?: Maybe<Bed>;
   createdAt: Scalars['String']['output'];
-  createdBy: Allocation_Source;
+  createdBy: AllocationSource;
   currency: Scalars['String']['output'];
   endDate?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   payments: Array<Payment>;
+  spaceUser?: Maybe<SpaceUser>;
   startDate?: Maybe<Scalars['String']['output']>;
-  status: Application_Status;
+  status: ApplicationStatus;
   stayType?: Maybe<StayType>;
-  student: User;
+  student?: Maybe<User>;
+  updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
 export type ApplicationFilter = {
@@ -75,6 +92,12 @@ export type ApplicationFilter = {
   stayTypeId?: InputMaybe<Scalars['ID']['input']>;
   studentId?: InputMaybe<Scalars['ID']['input']>;
 };
+
+export enum ApplicationStatus {
+  Approved = 'approved',
+  Pending = 'pending',
+  Rejected = 'rejected'
+}
 
 export type ApplyInput = {
   academicSession?: InputMaybe<Scalars['String']['input']>;
@@ -98,23 +121,29 @@ export type Bed = {
   currentAllocation?: Maybe<Allocation>;
   id: Scalars['ID']['output'];
   label: Scalars['String']['output'];
-  room: Room;
-  status: Bed_Status;
+  room?: Maybe<Room>;
+  status: BedStatus;
 };
 
 export type BedInput = {
   amount: Scalars['Int']['input'];
   classId?: InputMaybe<Scalars['ID']['input']>;
   label: Scalars['String']['input'];
-  status?: InputMaybe<Bed_Status>;
+  status?: InputMaybe<BedStatus>;
 };
+
+export enum BedStatus {
+  Available = 'available',
+  Inactive = 'inactive',
+  Occupied = 'occupied',
+  Reserved = 'reserved'
+}
 
 export type Class = {
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  space: Space;
-  username: Scalars['String']['output'];
+  space?: Maybe<Space>;
 };
 
 export type CreateSpaceInput = {
@@ -124,15 +153,15 @@ export type CreateSpaceInput = {
 export type CreateSpaceUserInput = {
   classId?: InputMaybe<Scalars['ID']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
-  firstName?: InputMaybe<Scalars['String']['input']>;
-  gender?: InputMaybe<Gender>;
+  firstName: Scalars['String']['input'];
+  gender: Gender;
   image?: InputMaybe<Scalars['String']['input']>;
-  lastName?: InputMaybe<Scalars['String']['input']>;
-  name?: InputMaybe<Scalars['String']['input']>;
+  lastName: Scalars['String']['input'];
   parentId?: InputMaybe<Scalars['ID']['input']>;
   password: Scalars['String']['input'];
   phone?: InputMaybe<Scalars['String']['input']>;
-  role: SpaceRole;
+  role: Scalars['String']['input'];
+  studentId?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
 };
 
 export type CreateUserInput = {
@@ -154,8 +183,8 @@ export type Hostel = {
   id: Scalars['ID']['output'];
   location?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
-  rooms: Array<Room>;
-  space: Space;
+  rooms?: Maybe<Array<Room>>;
+  space?: Maybe<Space>;
   status: Status;
 };
 
@@ -200,11 +229,13 @@ export type Mutation = {
 
 export type MutationAdminBulkAllocateArgs = {
   inputs: Array<ApplyInput>;
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationApproveApplicationArgs = {
   applicationId: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -216,17 +247,20 @@ export type MutationChangePasswordArgs = {
 
 export type MutationCheckInArgs = {
   allocationId: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationCheckOutArgs = {
   allocationId: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationCreateBedArgs = {
   input: BedInput;
   roomId: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -245,6 +279,7 @@ export type MutationCreateHostelArgs = {
 export type MutationCreateRoomArgs = {
   hostelId: Scalars['ID']['input'];
   input: RoomInput;
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -274,6 +309,7 @@ export type MutationForgotPasswordArgs = {
 
 export type MutationLinkParentToStudentArgs = {
   parentId: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
   studentId: Scalars['ID']['input'];
 };
 
@@ -289,29 +325,32 @@ export type MutationMarkLeaveArgs = {
   expectedReturn: Scalars['String']['input'];
   reason: Scalars['String']['input'];
   signOutDate: Scalars['String']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationParentBulkBookArgs = {
   inputs: Array<ApplyInput>;
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationPayHostelFeeArgs = {
   applicationNumber: Scalars['String']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationRecordPaymentArgs = {
   applicationNumber: Scalars['String']['input'];
-  status: Payment_Status;
+  spaceId: Scalars['ID']['input'];
+  status: PaymentStatus;
 };
 
 
 export type MutationResetPasswordArgs = {
   email: Scalars['String']['input'];
   newPassword: Scalars['String']['input'];
-  otp: Scalars['String']['input'];
 };
 
 
@@ -322,24 +361,28 @@ export type MutationSignupArgs = {
 
 export type MutationStudentBookArgs = {
   input: ApplyInput;
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationUpdateBedArgs = {
   id: Scalars['ID']['input'];
   input: UpdateBedInput;
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationUpdateHostelArgs = {
   id: Scalars['ID']['input'];
   input: UpdateHostelInput;
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type MutationUpdateRoomArgs = {
   id: Scalars['ID']['input'];
   input: UpdateRoomInput;
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -351,19 +394,27 @@ export type MutationVerifyOtpArgs = {
 
 export type MutationVerifyPaymentArgs = {
   reference: Scalars['String']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 export type Payment = {
   allocation?: Maybe<Allocation>;
   amount: Scalars['Float']['output'];
   application?: Maybe<Application>;
+  authorizationUrl?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
   currency: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   method?: Maybe<Scalars['String']['output']>;
   reference: Scalars['String']['output'];
-  status: Payment_Status;
+  status: PaymentStatus;
+  updatedAt?: Maybe<Scalars['String']['output']>;
 };
+
+export enum PaymentStatus {
+  Paid = 'paid',
+  Pending = 'pending'
+}
 
 export type PublicHostel = {
   availableBeds: Scalars['Int']['output'];
@@ -411,21 +462,25 @@ export type Query = {
 
 export type QueryAllocationArgs = {
   id: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type QueryAllocationsArgs = {
   filter?: InputMaybe<AllocationFilter>;
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type QueryApplicationArgs = {
   id: Scalars['ID']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
 export type QueryApplicationsArgs = {
   filter?: InputMaybe<ApplicationFilter>;
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -467,6 +522,7 @@ export type QueryPaymentArgs = {
 export type QueryPaymentsArgs = {
   allocationNumber?: InputMaybe<Scalars['String']['input']>;
   applicationNumber?: InputMaybe<Scalars['String']['input']>;
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -522,7 +578,7 @@ export enum Role {
 export type Room = {
   beds: Array<Bed>;
   capacity: Scalars['Int']['output'];
-  hostel: Hostel;
+  hostel?: Maybe<Hostel>;
   id: Scalars['ID']['output'];
   label: Scalars['String']['output'];
   price?: Maybe<Scalars['Int']['output']>;
@@ -551,25 +607,29 @@ export type SimpleUser = {
 
 export type Space = {
   classes: Array<Class>;
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
   createdBy: SimpleUser;
   createdById: Scalars['ID']['output'];
   hostels: Array<Hostel>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   stayTypes: Array<StayType>;
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
   users: Array<SpaceUser>;
 };
 
+export enum SpaceRole {
+  Admin = 'admin',
+  Parent = 'parent',
+  Student = 'student'
+}
+
 export type SpaceUser = {
-  allocations: Array<Allocation>;
-  applications: Array<Application>;
-  class?: Maybe<Class>;
-  createdAt: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
-  parent?: Maybe<User>;
-  role: SpaceRole;
-  space?: Maybe<SimpleSpaceInfo>;
+  role: Scalars['String']['output'];
+  space: SimpleSpaceInfo;
+  updatedAt: Scalars['DateTime']['output'];
   user: User;
 };
 
@@ -585,7 +645,7 @@ export type UpdateBedInput = {
   amount?: InputMaybe<Scalars['Int']['input']>;
   classId?: InputMaybe<Scalars['ID']['input']>;
   label?: InputMaybe<Scalars['String']['input']>;
-  status?: InputMaybe<Bed_Status>;
+  status?: InputMaybe<BedStatus>;
 };
 
 export type UpdateHostelInput = {
@@ -610,46 +670,11 @@ export type User = {
   image?: Maybe<Scalars['String']['output']>;
   lastName: Scalars['String']['output'];
   phone?: Maybe<Scalars['String']['output']>;
-  spaces: Array<Space>;
+  resetOtp?: Maybe<Scalars['String']['output']>;
+  resetOtpExpiry?: Maybe<Scalars['String']['output']>;
+  spaces?: Maybe<Array<Space>>;
   username: Scalars['String']['output'];
 };
-
-export enum Allocation_Source {
-  Admin = 'admin',
-  Parent = 'parent',
-  Student = 'student'
-}
-
-export enum Allocation_Status {
-  Active = 'active',
-  CheckedOut = 'checked_out',
-  HolidayLeave = 'holiday_leave',
-  Reserved = 'reserved'
-}
-
-export enum Application_Status {
-  Approved = 'approved',
-  Pending = 'pending',
-  Rejected = 'rejected'
-}
-
-export enum Bed_Status {
-  Available = 'available',
-  Inactive = 'inactive',
-  Occupied = 'occupied',
-  Reserved = 'reserved'
-}
-
-export enum Payment_Status {
-  Paid = 'paid',
-  Pending = 'pending'
-}
-
-export enum SpaceRole {
-  Admin = 'admin',
-  Parent = 'parent',
-  Student = 'student'
-}
 
 export enum Status {
   Active = 'active',
@@ -732,17 +757,23 @@ export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = 
 export type ResolversTypes = ResolversObject<{
   Allocation: ResolverTypeWrapper<Partial<Allocation>>;
   AllocationFilter: ResolverTypeWrapper<Partial<AllocationFilter>>;
+  AllocationSource: ResolverTypeWrapper<Partial<AllocationSource>>;
+  AllocationStatus: ResolverTypeWrapper<Partial<AllocationStatus>>;
   Application: ResolverTypeWrapper<Partial<Application>>;
   ApplicationFilter: ResolverTypeWrapper<Partial<ApplicationFilter>>;
+  ApplicationStatus: ResolverTypeWrapper<Partial<ApplicationStatus>>;
   ApplyInput: ResolverTypeWrapper<Partial<ApplyInput>>;
   AuthPayload: ResolverTypeWrapper<Partial<AuthPayload>>;
   Bed: ResolverTypeWrapper<Partial<Bed>>;
   BedInput: ResolverTypeWrapper<Partial<BedInput>>;
+  BedStatus: ResolverTypeWrapper<Partial<BedStatus>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']['output']>>;
   Class: ResolverTypeWrapper<Partial<Class>>;
   CreateSpaceInput: ResolverTypeWrapper<Partial<CreateSpaceInput>>;
   CreateSpaceUserInput: ResolverTypeWrapper<Partial<CreateSpaceUserInput>>;
   CreateUserInput: ResolverTypeWrapper<Partial<CreateUserInput>>;
+  Date: ResolverTypeWrapper<Partial<Scalars['Date']['output']>>;
+  DateTime: ResolverTypeWrapper<Partial<Scalars['DateTime']['output']>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']['output']>>;
   Gender: ResolverTypeWrapper<Partial<Gender>>;
   Hostel: ResolverTypeWrapper<Partial<Hostel>>;
@@ -751,6 +782,7 @@ export type ResolversTypes = ResolversObject<{
   Int: ResolverTypeWrapper<Partial<Scalars['Int']['output']>>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Payment: ResolverTypeWrapper<Partial<Payment>>;
+  PaymentStatus: ResolverTypeWrapper<Partial<PaymentStatus>>;
   PublicHostel: ResolverTypeWrapper<Partial<PublicHostel>>;
   PublicSpace: ResolverTypeWrapper<Partial<PublicSpace>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -760,6 +792,7 @@ export type ResolversTypes = ResolversObject<{
   SimpleSpaceInfo: ResolverTypeWrapper<Partial<SimpleSpaceInfo>>;
   SimpleUser: ResolverTypeWrapper<Partial<SimpleUser>>;
   Space: ResolverTypeWrapper<Partial<Space>>;
+  SpaceRole: ResolverTypeWrapper<Partial<SpaceRole>>;
   SpaceUser: ResolverTypeWrapper<Partial<SpaceUser>>;
   StayType: ResolverTypeWrapper<Partial<StayType>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
@@ -767,12 +800,6 @@ export type ResolversTypes = ResolversObject<{
   UpdateHostelInput: ResolverTypeWrapper<Partial<UpdateHostelInput>>;
   UpdateRoomInput: ResolverTypeWrapper<Partial<UpdateRoomInput>>;
   User: ResolverTypeWrapper<Partial<User>>;
-  allocation_source: ResolverTypeWrapper<Partial<Allocation_Source>>;
-  allocation_status: ResolverTypeWrapper<Partial<Allocation_Status>>;
-  application_status: ResolverTypeWrapper<Partial<Application_Status>>;
-  bed_status: ResolverTypeWrapper<Partial<Bed_Status>>;
-  payment_status: ResolverTypeWrapper<Partial<Payment_Status>>;
-  spaceRole: ResolverTypeWrapper<Partial<SpaceRole>>;
   status: ResolverTypeWrapper<Partial<Status>>;
 }>;
 
@@ -791,6 +818,8 @@ export type ResolversParentTypes = ResolversObject<{
   CreateSpaceInput: Partial<CreateSpaceInput>;
   CreateSpaceUserInput: Partial<CreateSpaceUserInput>;
   CreateUserInput: Partial<CreateUserInput>;
+  Date: Partial<Scalars['Date']['output']>;
+  DateTime: Partial<Scalars['DateTime']['output']>;
   Float: Partial<Scalars['Float']['output']>;
   Hostel: Partial<Hostel>;
   HostelInput: Partial<HostelInput>;
@@ -815,119 +844,131 @@ export type ResolversParentTypes = ResolversObject<{
   User: Partial<User>;
 }>;
 
-export type AllocationResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Allocation'] = ResolversParentTypes['Allocation']> = ResolversObject<{
+export type AllocationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Allocation'] = ResolversParentTypes['Allocation']> = ResolversObject<{
   academicSession?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   academicTerm?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   allocationNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  application?: Resolver<ResolversTypes['Application'], ParentType, ContextType>;
-  bed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType>;
+  application?: Resolver<Maybe<ResolversTypes['Application']>, ParentType, ContextType>;
+  bed?: Resolver<Maybe<ResolversTypes['Bed']>, ParentType, ContextType>;
   checkInDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   checkOutDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdBy?: Resolver<ResolversTypes['allocation_source'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['AllocationSource'], ParentType, ContextType>;
   endDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  payments?: Resolver<Array<ResolversTypes['Payment']>, ParentType, ContextType>;
+  payments?: Resolver<Maybe<Array<ResolversTypes['Payment']>>, ParentType, ContextType>;
   startDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['allocation_status'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['AllocationStatus'], ParentType, ContextType>;
   stayType?: Resolver<Maybe<ResolversTypes['StayType']>, ParentType, ContextType>;
-  student?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  student?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
 }>;
 
-export type ApplicationResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Application'] = ResolversParentTypes['Application']> = ResolversObject<{
+export type ApplicationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Application'] = ResolversParentTypes['Application']> = ResolversObject<{
   academicSession?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   academicTerm?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  allocations?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType>;
   amount?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   applicationNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  bed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType>;
+  bed?: Resolver<Maybe<ResolversTypes['Bed']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdBy?: Resolver<ResolversTypes['allocation_source'], ParentType, ContextType>;
+  createdBy?: Resolver<ResolversTypes['AllocationSource'], ParentType, ContextType>;
   currency?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   endDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payments?: Resolver<Array<ResolversTypes['Payment']>, ParentType, ContextType>;
+  spaceUser?: Resolver<Maybe<ResolversTypes['SpaceUser']>, ParentType, ContextType>;
   startDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['application_status'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['ApplicationStatus'], ParentType, ContextType>;
   stayType?: Resolver<Maybe<ResolversTypes['StayType']>, ParentType, ContextType>;
-  student?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  student?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 }>;
 
-export type AuthPayloadResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['AuthPayload'] = ResolversParentTypes['AuthPayload']> = ResolversObject<{
+export type AuthPayloadResolvers<ContextType = any, ParentType extends ResolversParentTypes['AuthPayload'] = ResolversParentTypes['AuthPayload']> = ResolversObject<{
   token?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
-export type BedResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Bed'] = ResolversParentTypes['Bed']> = ResolversObject<{
+export type BedResolvers<ContextType = any, ParentType extends ResolversParentTypes['Bed'] = ResolversParentTypes['Bed']> = ResolversObject<{
   amount?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   class?: Resolver<Maybe<ResolversTypes['Class']>, ParentType, ContextType>;
   currentAllocation?: Resolver<Maybe<ResolversTypes['Allocation']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   label?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  room?: Resolver<ResolversTypes['Room'], ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['bed_status'], ParentType, ContextType>;
+  room?: Resolver<Maybe<ResolversTypes['Room']>, ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['BedStatus'], ParentType, ContextType>;
 }>;
 
-export type ClassResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Class'] = ResolversParentTypes['Class']> = ResolversObject<{
+export type ClassResolvers<ContextType = any, ParentType extends ResolversParentTypes['Class'] = ResolversParentTypes['Class']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
-  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
 }>;
 
-export type HostelResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Hostel'] = ResolversParentTypes['Hostel']> = ResolversObject<{
+export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
+  name: 'Date';
+}
+
+export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['DateTime'], any> {
+  name: 'DateTime';
+}
+
+export type HostelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Hostel'] = ResolversParentTypes['Hostel']> = ResolversObject<{
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   gender?: Resolver<ResolversTypes['Gender'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   location?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  rooms?: Resolver<Array<ResolversTypes['Room']>, ParentType, ContextType>;
-  space?: Resolver<ResolversTypes['Space'], ParentType, ContextType>;
+  rooms?: Resolver<Maybe<Array<ResolversTypes['Room']>>, ParentType, ContextType>;
+  space?: Resolver<Maybe<ResolversTypes['Space']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['status'], ParentType, ContextType>;
 }>;
 
-export type MutationResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
-  adminBulkAllocate?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType, RequireFields<MutationAdminBulkAllocateArgs, 'inputs'>>;
-  approveApplication?: Resolver<ResolversTypes['Allocation'], ParentType, ContextType, RequireFields<MutationApproveApplicationArgs, 'applicationId'>>;
+export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
+  adminBulkAllocate?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType, RequireFields<MutationAdminBulkAllocateArgs, 'inputs' | 'spaceId'>>;
+  approveApplication?: Resolver<ResolversTypes['Allocation'], ParentType, ContextType, RequireFields<MutationApproveApplicationArgs, 'applicationId' | 'spaceId'>>;
   changePassword?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationChangePasswordArgs, 'newPassword' | 'oldPassword'>>;
-  checkIn?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCheckInArgs, 'allocationId'>>;
-  checkOut?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCheckOutArgs, 'allocationId'>>;
-  createBed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType, RequireFields<MutationCreateBedArgs, 'input' | 'roomId'>>;
+  checkIn?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCheckInArgs, 'allocationId' | 'spaceId'>>;
+  checkOut?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCheckOutArgs, 'allocationId' | 'spaceId'>>;
+  createBed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType, RequireFields<MutationCreateBedArgs, 'input' | 'roomId' | 'spaceId'>>;
   createClass?: Resolver<ResolversTypes['Class'], ParentType, ContextType, RequireFields<MutationCreateClassArgs, 'name' | 'spaceId'>>;
   createHostel?: Resolver<ResolversTypes['Hostel'], ParentType, ContextType, RequireFields<MutationCreateHostelArgs, 'input' | 'spaceId'>>;
-  createRoom?: Resolver<ResolversTypes['Room'], ParentType, ContextType, RequireFields<MutationCreateRoomArgs, 'hostelId' | 'input'>>;
+  createRoom?: Resolver<ResolversTypes['Room'], ParentType, ContextType, RequireFields<MutationCreateRoomArgs, 'hostelId' | 'input' | 'spaceId'>>;
   createSpace?: Resolver<ResolversTypes['Space'], ParentType, ContextType, RequireFields<MutationCreateSpaceArgs, 'input'>>;
   createSpaceUser?: Resolver<ResolversTypes['SpaceUser'], ParentType, ContextType, RequireFields<MutationCreateSpaceUserArgs, 'input' | 'spaceId'>>;
   createStayType?: Resolver<ResolversTypes['StayType'], ParentType, ContextType, RequireFields<MutationCreateStayTypeArgs, 'endDate' | 'name' | 'spaceId' | 'startDate'>>;
   forgotPassword?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationForgotPasswordArgs, 'email'>>;
-  linkParentToStudent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationLinkParentToStudentArgs, 'parentId' | 'studentId'>>;
+  linkParentToStudent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationLinkParentToStudentArgs, 'parentId' | 'spaceId' | 'studentId'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, RequireFields<MutationLoginArgs, 'identifier' | 'password'>>;
-  markLeave?: Resolver<ResolversTypes['Allocation'], ParentType, ContextType, RequireFields<MutationMarkLeaveArgs, 'allocationId' | 'expectedReturn' | 'reason' | 'signOutDate'>>;
-  parentBulkBook?: Resolver<Array<ResolversTypes['Application']>, ParentType, ContextType, RequireFields<MutationParentBulkBookArgs, 'inputs'>>;
-  payHostelFee?: Resolver<ResolversTypes['Payment'], ParentType, ContextType, RequireFields<MutationPayHostelFeeArgs, 'applicationNumber'>>;
-  recordPayment?: Resolver<ResolversTypes['Payment'], ParentType, ContextType, RequireFields<MutationRecordPaymentArgs, 'applicationNumber' | 'status'>>;
-  resetPassword?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationResetPasswordArgs, 'email' | 'newPassword' | 'otp'>>;
+  markLeave?: Resolver<ResolversTypes['Allocation'], ParentType, ContextType, RequireFields<MutationMarkLeaveArgs, 'allocationId' | 'expectedReturn' | 'reason' | 'signOutDate' | 'spaceId'>>;
+  parentBulkBook?: Resolver<Array<ResolversTypes['Application']>, ParentType, ContextType, RequireFields<MutationParentBulkBookArgs, 'inputs' | 'spaceId'>>;
+  payHostelFee?: Resolver<ResolversTypes['Payment'], ParentType, ContextType, RequireFields<MutationPayHostelFeeArgs, 'applicationNumber' | 'spaceId'>>;
+  recordPayment?: Resolver<ResolversTypes['Payment'], ParentType, ContextType, RequireFields<MutationRecordPaymentArgs, 'applicationNumber' | 'spaceId' | 'status'>>;
+  resetPassword?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationResetPasswordArgs, 'email' | 'newPassword'>>;
   signup?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, RequireFields<MutationSignupArgs, 'input'>>;
-  studentBook?: Resolver<ResolversTypes['Application'], ParentType, ContextType, RequireFields<MutationStudentBookArgs, 'input'>>;
-  updateBed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType, RequireFields<MutationUpdateBedArgs, 'id' | 'input'>>;
-  updateHostel?: Resolver<ResolversTypes['Hostel'], ParentType, ContextType, RequireFields<MutationUpdateHostelArgs, 'id' | 'input'>>;
-  updateRoom?: Resolver<ResolversTypes['Room'], ParentType, ContextType, RequireFields<MutationUpdateRoomArgs, 'id' | 'input'>>;
+  studentBook?: Resolver<ResolversTypes['Application'], ParentType, ContextType, RequireFields<MutationStudentBookArgs, 'input' | 'spaceId'>>;
+  updateBed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType, RequireFields<MutationUpdateBedArgs, 'id' | 'input' | 'spaceId'>>;
+  updateHostel?: Resolver<ResolversTypes['Hostel'], ParentType, ContextType, RequireFields<MutationUpdateHostelArgs, 'id' | 'input' | 'spaceId'>>;
+  updateRoom?: Resolver<ResolversTypes['Room'], ParentType, ContextType, RequireFields<MutationUpdateRoomArgs, 'id' | 'input' | 'spaceId'>>;
   verifyOtp?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationVerifyOtpArgs, 'email' | 'otp'>>;
-  verifyPayment?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationVerifyPaymentArgs, 'reference'>>;
+  verifyPayment?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationVerifyPaymentArgs, 'reference' | 'spaceId'>>;
 }>;
 
-export type PaymentResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Payment'] = ResolversParentTypes['Payment']> = ResolversObject<{
+export type PaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Payment'] = ResolversParentTypes['Payment']> = ResolversObject<{
   allocation?: Resolver<Maybe<ResolversTypes['Allocation']>, ParentType, ContextType>;
   amount?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   application?: Resolver<Maybe<ResolversTypes['Application']>, ParentType, ContextType>;
+  authorizationUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   currency?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   method?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   reference?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  status?: Resolver<ResolversTypes['payment_status'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['PaymentStatus'], ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 }>;
 
-export type PublicHostelResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['PublicHostel'] = ResolversParentTypes['PublicHostel']> = ResolversObject<{
+export type PublicHostelResolvers<ContextType = any, ParentType extends ResolversParentTypes['PublicHostel'] = ResolversParentTypes['PublicHostel']> = ResolversObject<{
   availableBeds?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   gender?: Resolver<ResolversTypes['Gender'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -937,17 +978,17 @@ export type PublicHostelResolvers<ContextType = ContextProps, ParentType extends
   status?: Resolver<ResolversTypes['status'], ParentType, ContextType>;
 }>;
 
-export type PublicSpaceResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['PublicSpace'] = ResolversParentTypes['PublicSpace']> = ResolversObject<{
+export type PublicSpaceResolvers<ContextType = any, ParentType extends ResolversParentTypes['PublicSpace'] = ResolversParentTypes['PublicSpace']> = ResolversObject<{
   hostels?: Resolver<Array<ResolversTypes['PublicHostel']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
-export type QueryResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  allocation?: Resolver<Maybe<ResolversTypes['Allocation']>, ParentType, ContextType, RequireFields<QueryAllocationArgs, 'id'>>;
-  allocations?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType, Partial<QueryAllocationsArgs>>;
-  application?: Resolver<Maybe<ResolversTypes['Application']>, ParentType, ContextType, RequireFields<QueryApplicationArgs, 'id'>>;
-  applications?: Resolver<Array<ResolversTypes['Application']>, ParentType, ContextType, Partial<QueryApplicationsArgs>>;
+export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  allocation?: Resolver<Maybe<ResolversTypes['Allocation']>, ParentType, ContextType, RequireFields<QueryAllocationArgs, 'id' | 'spaceId'>>;
+  allocations?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType, RequireFields<QueryAllocationsArgs, 'spaceId'>>;
+  application?: Resolver<Maybe<ResolversTypes['Application']>, ParentType, ContextType, RequireFields<QueryApplicationArgs, 'id' | 'spaceId'>>;
+  applications?: Resolver<Array<ResolversTypes['Application']>, ParentType, ContextType, RequireFields<QueryApplicationsArgs, 'spaceId'>>;
   bed?: Resolver<Maybe<ResolversTypes['Bed']>, ParentType, ContextType, RequireFields<QueryBedArgs, 'id'>>;
   beds?: Resolver<Array<ResolversTypes['Bed']>, ParentType, ContextType, RequireFields<QueryBedsArgs, 'roomId'>>;
   class?: Resolver<Maybe<ResolversTypes['Class']>, ParentType, ContextType, RequireFields<QueryClassArgs, 'id'>>;
@@ -955,7 +996,7 @@ export type QueryResolvers<ContextType = ContextProps, ParentType extends Resolv
   hostel?: Resolver<Maybe<ResolversTypes['Hostel']>, ParentType, ContextType, RequireFields<QueryHostelArgs, 'id'>>;
   hostels?: Resolver<Array<ResolversTypes['Hostel']>, ParentType, ContextType, RequireFields<QueryHostelsArgs, 'spaceId'>>;
   payment?: Resolver<Maybe<ResolversTypes['Payment']>, ParentType, ContextType, RequireFields<QueryPaymentArgs, 'id'>>;
-  payments?: Resolver<Array<ResolversTypes['Payment']>, ParentType, ContextType, Partial<QueryPaymentsArgs>>;
+  payments?: Resolver<Array<ResolversTypes['Payment']>, ParentType, ContextType, RequireFields<QueryPaymentsArgs, 'spaceId'>>;
   publicHostel?: Resolver<Maybe<ResolversTypes['PublicHostel']>, ParentType, ContextType, RequireFields<QueryPublicHostelArgs, 'id'>>;
   publicHostels?: Resolver<Array<ResolversTypes['PublicHostel']>, ParentType, ContextType, RequireFields<QueryPublicHostelsArgs, 'spaceId'>>;
   publicSpace?: Resolver<Maybe<ResolversTypes['PublicSpace']>, ParentType, ContextType, RequireFields<QueryPublicSpaceArgs, 'id'>>;
@@ -970,53 +1011,51 @@ export type QueryResolvers<ContextType = ContextProps, ParentType extends Resolv
   users?: Resolver<Array<ResolversTypes['SpaceUser']>, ParentType, ContextType, RequireFields<QueryUsersArgs, 'spaceId'>>;
 }>;
 
-export type RoomResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Room'] = ResolversParentTypes['Room']> = ResolversObject<{
+export type RoomResolvers<ContextType = any, ParentType extends ResolversParentTypes['Room'] = ResolversParentTypes['Room']> = ResolversObject<{
   beds?: Resolver<Array<ResolversTypes['Bed']>, ParentType, ContextType>;
   capacity?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
-  hostel?: Resolver<ResolversTypes['Hostel'], ParentType, ContextType>;
+  hostel?: Resolver<Maybe<ResolversTypes['Hostel']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   label?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   price?: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['status'], ParentType, ContextType>;
 }>;
 
-export type SimpleSpaceInfoResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['SimpleSpaceInfo'] = ResolversParentTypes['SimpleSpaceInfo']> = ResolversObject<{
+export type SimpleSpaceInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['SimpleSpaceInfo'] = ResolversParentTypes['SimpleSpaceInfo']> = ResolversObject<{
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
-export type SimpleUserResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['SimpleUser'] = ResolversParentTypes['SimpleUser']> = ResolversObject<{
+export type SimpleUserResolvers<ContextType = any, ParentType extends ResolversParentTypes['SimpleUser'] = ResolversParentTypes['SimpleUser']> = ResolversObject<{
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
-export type SpaceResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['Space'] = ResolversParentTypes['Space']> = ResolversObject<{
+export type SpaceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Space'] = ResolversParentTypes['Space']> = ResolversObject<{
   classes?: Resolver<Array<ResolversTypes['Class']>, ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   createdBy?: Resolver<ResolversTypes['SimpleUser'], ParentType, ContextType>;
   createdById?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   hostels?: Resolver<Array<ResolversTypes['Hostel']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   stayTypes?: Resolver<Array<ResolversTypes['StayType']>, ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   users?: Resolver<Array<ResolversTypes['SpaceUser']>, ParentType, ContextType>;
 }>;
 
-export type SpaceUserResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['SpaceUser'] = ResolversParentTypes['SpaceUser']> = ResolversObject<{
-  allocations?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType>;
-  applications?: Resolver<Array<ResolversTypes['Application']>, ParentType, ContextType>;
-  class?: Resolver<Maybe<ResolversTypes['Class']>, ParentType, ContextType>;
-  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+export type SpaceUserResolvers<ContextType = any, ParentType extends ResolversParentTypes['SpaceUser'] = ResolversParentTypes['SpaceUser']> = ResolversObject<{
+  createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  parent?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  role?: Resolver<ResolversTypes['spaceRole'], ParentType, ContextType>;
-  space?: Resolver<Maybe<ResolversTypes['SimpleSpaceInfo']>, ParentType, ContextType>;
+  role?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  space?: Resolver<ResolversTypes['SimpleSpaceInfo'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
 }>;
 
-export type StayTypeResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['StayType'] = ResolversParentTypes['StayType']> = ResolversObject<{
+export type StayTypeResolvers<ContextType = any, ParentType extends ResolversParentTypes['StayType'] = ResolversParentTypes['StayType']> = ResolversObject<{
   endDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1024,7 +1063,7 @@ export type StayTypeResolvers<ContextType = ContextProps, ParentType extends Res
   startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
-export type UserResolvers<ContextType = ContextProps, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
+export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = ResolversObject<{
   email?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   gender?: Resolver<Maybe<ResolversTypes['Gender']>, ParentType, ContextType>;
@@ -1032,16 +1071,20 @@ export type UserResolvers<ContextType = ContextProps, ParentType extends Resolve
   image?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   phone?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  spaces?: Resolver<Array<ResolversTypes['Space']>, ParentType, ContextType>;
+  resetOtp?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  resetOtpExpiry?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  spaces?: Resolver<Maybe<Array<ResolversTypes['Space']>>, ParentType, ContextType>;
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
-export type Resolvers<ContextType = ContextProps> = ResolversObject<{
+export type Resolvers<ContextType = any> = ResolversObject<{
   Allocation?: AllocationResolvers<ContextType>;
   Application?: ApplicationResolvers<ContextType>;
   AuthPayload?: AuthPayloadResolvers<ContextType>;
   Bed?: BedResolvers<ContextType>;
   Class?: ClassResolvers<ContextType>;
+  Date?: GraphQLScalarType;
+  DateTime?: GraphQLScalarType;
   Hostel?: HostelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Payment?: PaymentResolvers<ContextType>;

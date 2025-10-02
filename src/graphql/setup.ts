@@ -1,6 +1,6 @@
 import { ApolloServer } from "@apollo/server";
 import { authDirective } from "./directives/authDirective";
-// import { spaceDirective } from "./directives/spaceDirectives";
+import { spaceDirective } from "./directives/spaceDirectives";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { readGqlSchemas } from "./types";
@@ -8,20 +8,20 @@ import RESOLVERS from "./resolvers/indexResolver";
 
 const { authDirectiveTypeDefs, authDirectiveTransformer } =
   authDirective("auth");
-// const { spaceDirectiveTypeDefs, spaceDirectiveTransformer } =
-//   spaceDirective("space_auth");
+const { spaceDirectiveTypeDefs, spaceDirectiveTransformer } =
+  spaceDirective("spaceAuth");
 
   let schema = makeExecutableSchema({
     typeDefs: [
       ...readGqlSchemas(),
       authDirectiveTypeDefs,
-      // spaceDirectiveTypeDefs,
+      spaceDirectiveTypeDefs,
     ],
     resolvers: RESOLVERS,
   });
 
   const directiveTransformers = [
-    // spaceDirectiveTransformer,
+    spaceDirectiveTransformer,
     authDirectiveTransformer,
   ];
   
