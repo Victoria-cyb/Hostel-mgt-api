@@ -1,3 +1,5 @@
+
+
 enum Role {
   user
   cit_admin
@@ -18,7 +20,9 @@ type User {
   gender: Gender
   image: String
   username: String!
-  spaces: [Space!]!
+  spaces: [Space!]
+  resetOtp: String
+  resetOtpExpiry: String
 }
 
 # ========== AUTH PAYLOAD ==========
@@ -46,6 +50,6 @@ type Mutation {
   login(identifier: String!, password: String!): AuthPayload!
   forgotPassword(email: String!): String!
   verifyOtp(email: String!, otp: String!): Boolean!
-  resetPassword(email: String!, otp: String!, newPassword: String!): Boolean!
-  changePassword(oldPassword: String!, newPassword: String!): Boolean!
+  resetPassword(email: String!, newPassword: String!): Boolean!
+  changePassword(oldPassword: String!, newPassword: String!): Boolean! @auth
 }

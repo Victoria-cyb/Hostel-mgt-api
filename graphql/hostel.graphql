@@ -1,4 +1,7 @@
-enum bed_status {
+scalar Date
+
+
+enum BedStatus {
   available
   reserved
   occupied
@@ -21,18 +24,18 @@ type PublicHostel {
 
 type Hostel {
   id: ID!
-  space: Space!
+  space: Space
   name: String!
   gender: Gender!
   location: String
   status: status!
-  rooms: [Room!]!
+  rooms: [Room!]
   createdAt: String!
 }
 
 type Room {
   id: ID!
-  hostel: Hostel!
+  hostel: Hostel
   label: String!
   capacity: Int!
   price: Int
@@ -42,9 +45,9 @@ type Room {
 
 type Bed {
   id: ID!
-  room: Room!
+  room: Room
   label: String!
-  status: bed_status!
+  status: BedStatus!
   class: Class
   amount: Int!
   currentAllocation: Allocation
@@ -61,7 +64,7 @@ type StayType {
 # ========== INPUTS ==========
 input BedInput {
   label: String!
-  status: bed_status
+  status: BedStatus
   classId: ID
   amount: Int!
 }
@@ -98,32 +101,32 @@ input UpdateRoomInput {
 
 input UpdateBedInput {
   label: String
-  status: bed_status
+  status: BedStatus
   classId: ID
   amount: Int
 }
 
 # ========== HOSTEL QUERIES ==========
 extend type Query {
-  hostels(spaceId: ID!): [Hostel!]!
+  hostels(spaceId: ID!): [Hostel!]! @auth
   publicHostels(spaceId: ID!): [PublicHostel!]!
-  hostel(id: ID!): Hostel
+  hostel(id: ID!): Hostel @auth
   publicHostel(id: ID!): PublicHostel
-  rooms(hostelId: ID!): [Room!]!
-  room(id: ID!): Room
-  beds(roomId: ID!): [Bed!]!
-  bed(id: ID!): Bed
-  stayTypes(spaceId: ID!): [StayType!]!
-  stayType(id: ID!): StayType
+  rooms(hostelId: ID!): [Room!]! @auth
+  room(id: ID!): Room @auth
+  beds(roomId: ID!): [Bed!]! @auth
+  bed(id: ID!): Bed @auth
+  stayTypes(spaceId: ID!): [StayType!]! @auth
+  stayType(id: ID!): StayType @auth
 }
 
 # ========== HOSTEL MUTATIONS ==========
 extend type Mutation {
-  createHostel(spaceId: ID!, input: HostelInput!): Hostel!
-  createRoom(hostelId: ID!, input: RoomInput!): Room!
-  createBed(roomId: ID!, input: BedInput!): Bed!
-  updateHostel(id: ID!, input: UpdateHostelInput!): Hostel!
-  updateRoom(id: ID!, input: UpdateRoomInput!): Room!
-  updateBed(id: ID!, input: UpdateBedInput!): Bed!
-  createStayType(spaceId: ID!, name: String!, startDate: String!, endDate: String!): StayType!
+  createHostel(spaceId: ID!, input: HostelInput!): Hostel! @auth @spaceAuth(requires: [admin])
+  createRoom(spaceId: ID!, hostelId: ID!, input: RoomInput!): Room! @auth @spaceAuth(requires: [admin])
+  createBed(spaceId: ID!, roomId: ID!, input: BedInput!): Bed! @auth @spaceAuth(requires: [admin])
+  updateHostel(spaceId: ID!, id: ID!, input: UpdateHostelInput!): Hostel! @auth @spaceAuth(requires: [admin])
+  updateRoom(spaceId: ID!, id: ID!, input: UpdateRoomInput!): Room! @auth @spaceAuth(requires: [admin])
+  updateBed(spaceId: ID!,id: ID!, input: UpdateBedInput!): Bed! @auth @spaceAuth(requires: [admin])
+  createStayType(spaceId: ID!, name: String!, startDate: String!, endDate: String!): StayType! @auth @spaceAuth(requires: [admin])
 }

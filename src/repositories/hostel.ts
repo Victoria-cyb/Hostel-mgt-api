@@ -68,4 +68,19 @@ export class HostelRepository {
 
   deleteBed: Prisma.BedDelegate["delete"] = (args) =>
     this.db.bed.delete(args);
+
+   createStayType: Prisma.StayTypeDelegate["create"] = (args) =>
+    this.db.stayType.create(args);
+
+  findUniqueStayType: Prisma.StayTypeDelegate["findUnique"] = (args) =>
+    this.db.stayType.findUnique(args);
+
+  findStayTypes: Prisma.StayTypeDelegate["findMany"] = (args) =>
+    this.db.stayType.findMany(args);
+
+  updateStayType: Prisma.StayTypeDelegate["update"] = (args) =>
+    this.db.stayType.update(args);
+
+  deleteStayType: Prisma.StayTypeDelegate["delete"] = (args) =>
+    this.db.stayType.delete(args);
 }

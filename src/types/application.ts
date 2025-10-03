@@ -1,24 +1,25 @@
 import type { User } from "./user";
 import type { Bed, StayType } from "./hostel";
 import type { Allocation } from "./allocation";
+import type { SpaceUser } from "./space";
 import type { TypeOrNull } from ".";
 
 // ================= Enums =================
 export enum ApplicationStatus {
-  Pending = "pending",
-  Approved = "approved",
-  Rejected = "rejected",
+Pending = "pending",
+Approved = "approved",
+Rejected = "rejected",
 }
 
 export enum AllocationSource {
-  Admin = "admin",
-  Parent = "parent",
-  Student = "student",
+Admin = "admin",
+Parent = "parent",
+Student = "student",
 }
 
 export enum PaymentStatus {
-  Pending = "pending",
-  Paid = "paid",
+Pending = "pending",
+Paid = "paid",
 }
 
 // ================= Entities =================
@@ -26,7 +27,7 @@ export interface Application {
   id: string;
   applicationNumber: string;
   student: User;
-  bed: Bed;
+  bed?: Bed;
   status: ApplicationStatus;
   amount: number;
   currency: string;
@@ -38,6 +39,9 @@ export interface Application {
   payments: Payment[];
   createdBy: AllocationSource;
   createdAt: string;
+  updatedAt?: TypeOrNull<string>;
+spaceUser?: TypeOrNull<SpaceUser>;
+allocations: Allocation[];
 }
 
 export interface Payment {
@@ -47,9 +51,11 @@ export interface Payment {
   reference: string;
   amount: number;
   currency: string;
-  status: PaymentStatus;
+ status: PaymentStatus;
   method?: TypeOrNull<string>;
   createdAt: string;
+  updatedAt?: TypeOrNull<string>;
+  authorizationUrl?: string;
 }
 
 // ================= Inputs =================

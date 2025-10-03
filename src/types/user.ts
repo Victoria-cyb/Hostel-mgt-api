@@ -24,7 +24,7 @@ export interface User {
   gender?: TypeOrNull<Gender>;
   image?: TypeOrNull<string>;
   username: string; // required
-  spaces: Space[];  // [Space!]!
+  spaces?: Space[];  // [Space!]!
 }
 
 export interface CreateUserInput {

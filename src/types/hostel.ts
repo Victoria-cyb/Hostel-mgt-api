@@ -2,6 +2,7 @@ import type { TypeOrNull } from ".";
 import type { Allocation } from "./allocation";
 import type { Class, Space } from "./space";
 
+
 // ================= Enums =================
 export enum BedStatus {
   Available = "available",
@@ -10,10 +11,8 @@ export enum BedStatus {
   Inactive = "inactive",
 }
 
-export enum Gender {
-  Male = "male",
-  Female = "female",
-}
+export type Gender = 'male' | 'female';
+
 
 export enum Status {
   Active = "active",
@@ -33,18 +32,18 @@ export interface PublicHostel {
 
 export interface Hostel {
   id: string;
-  space: Space;
+  space?: Space;
   name: string;
   gender: Gender;
   location?: TypeOrNull<string>;
   status: Status;
-  rooms: Room[];
+  rooms?: Room[];
   createdAt: string;
 }
 
 export interface Room {
   id: string;
-  hostel: Hostel;
+  hostel?: Hostel;
   label: string;
   capacity: number;
   price?: TypeOrNull<number>;
@@ -54,13 +53,15 @@ export interface Room {
 
 export interface Bed {
   id: string;
-  room: Room;
+  room?: Room;
   label: string;
   status: BedStatus;
   class?: TypeOrNull<Class>;
   amount: number;
   currentAllocation?: TypeOrNull<Allocation>;
 }
+
+
 
 export interface StayType {
   id: string;
@@ -76,4 +77,43 @@ export interface BedInput {
   status?: TypeOrNull<BedStatus>;
   classId?: TypeOrNull<string>;
   amount: number;
+}
+
+export interface HostelInput {
+  name: string;
+  gender: Gender;
+  location?: string | null;
+  status?: Status | null;
+  rooms?: RoomInput[] | null;
+}
+
+
+export interface RoomInput {
+  label: string;
+  capacity: number;
+  price?: number | null;
+  status?: Status | null;
+  beds?: BedInput[] | null;
+}
+
+export interface UpdateHostelInput {
+  name?: string | null;
+  gender?: Gender | null;
+  location?: string | null;
+  status?: Status | null;
+}
+
+export interface UpdateRoomInput {
+  label?: string | null;
+  capacity?: number | null;
+  price?: number | null;
+  status?: Status | null;
+}
+
+
+export interface UpdateBedInput {
+  label?: string | null;
+  status?: BedStatus | null;
+  classId?: string | null;
+  amount?: number | null;
 }
