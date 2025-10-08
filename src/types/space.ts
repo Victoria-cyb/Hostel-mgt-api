@@ -44,9 +44,15 @@ export interface SimpleSpaceInfo {
 export interface SpaceUser {
   id: string;
   user: User;
+  firstName: string
+  lastName: string
+  email?: string | null;
+  phone?: string | null;
+  gender?: Gender | null;
+  image?: string | null;
   space: SimpleSpaceInfo;
-  role: String;
-  student?: TypeOrNull<SpaceUser[]>;
+  role: string;
+  students?: TypeOrNull<SpaceUser[]>;
   parent?: TypeOrNull<User>;
   class?: TypeOrNull<Class>;
   applications: Application[];
@@ -58,7 +64,7 @@ export interface SpaceUser {
 export interface Class {
   id: string;
   space?: Space;
-  name: string;
+  names: string[];
   createdAt: string;
 }
 
@@ -76,11 +82,12 @@ export interface CreateSpaceUserInput {
     email?: TypeOrNull<string>;
     password: string;
     phone?: TypeOrNull<string>;
-    gender: Gender;
+    gender: Gender | null;
     image?: TypeOrNull<string>;
     classId?: TypeOrNull<string>;
     parentId?: string | null;
     studentId?: (string | null)[] | null;
+    
   }
 
 export interface CreateSpaceInput {

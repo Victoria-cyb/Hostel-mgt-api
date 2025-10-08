@@ -1,6 +1,6 @@
 
 import { HostelRepository } from "../repositories/hostel";
-import { Status, type HostelInput, type RoomInput, type BedInput, BedStatus, type UpdateHostelInput, type UpdateRoomInput, type UpdateBedInput, type StayType } from "../types/hostel";
+import { Status, type HostelInput, type RoomInput, type BedInput, BedStatus, type UpdateHostelInput, type UpdateRoomInput, type UpdateBedInput, type StayType, type Hostel } from "../types/hostel";
 import { Gender } from "../types/user";
 import { CustomError } from "../utils/error";
 
@@ -13,39 +13,47 @@ class HostelService {
         this.hostelRepository = new HostelRepository();
     }
 
+   
 
-    
+createHostels = async (inputs: HostelInput[], spaceId: string) => {
+  const results = [];
 
-    createHostel = async (input: HostelInput, spaceId: string) => {
-    const { name, gender, location, status } = input;
+  for (const input of inputs) {
+    const { name, gender, status } = input;
 
-    // Normalize rooms and beds
     const rooms: RoomInput[] = (input.rooms ?? []).map((room) => ({
       ...room,
       beds: room.beds ?? [],
       status: room.status ?? Status.Active,
     }));
     
-      
-    // 1️ Create the hostel
+
+    // Create hostel
     const hostel = await this.hostelRepository.createHostel({
       data: {
         name,
         gender,
-        location: location ?? null,
         status: status ?? Status.Active,
         space: { connect: { id: spaceId } },
-        roomCount: rooms.length,
-        availableBeds: rooms.reduce(
-          (acc, r) => acc + (r.beds ? r.beds.length : 0),
-          0,
-        ),
+        // roomCount: rooms.length,
+        // availableBeds: rooms.reduce(
+        //   (acc, r) => acc + (r.beds ? r.beds.length : 0),
+        //   0
+        // ),
       },
     });
 
-    // 2️ Create rooms and beds
+    // Create rooms & beds
     for (const roomInput of rooms) {
       const { beds: roomBeds, ...roomData } = roomInput;
+
+      // Capacity check
+      const bedCount = roomBeds?.length ?? 0;
+      if (roomData.capacity && bedCount > roomData.capacity) {
+        throw new CustomError(
+          `Room "${roomData.label ?? "Unnamed"}" exceeds its capacity of ${roomData.capacity} beds. (${bedCount} provided)`
+        );
+      }
 
       const room = await this.hostelRepository.createRoom({
         data: {
@@ -55,7 +63,6 @@ class HostelService {
         },
       });
 
-      //  Use a local variable with fallback
       const beds: BedInput[] = roomBeds ?? [];
 
       for (const bedInput of beds) {
@@ -63,7 +70,6 @@ class HostelService {
           data: {
             label: bedInput.label,
             status: bedInput.status ?? BedStatus.Available,
-            classId: bedInput.classId ?? null,
             amount: bedInput.amount,
             roomId: room.id,
           },
@@ -71,37 +77,40 @@ class HostelService {
       }
     }
 
-    // 3️⃣ Return hostel with rooms and beds included
-   const Hostel = await this.hostelRepository.findUniqueHostel({
-  where: { id: hostel.id },
-  include: {
-    space: true,
-    rooms: { include: { beds: true } },
-  },
+    // Fetch and format
+    const fullHostel = await this.hostelRepository.findUniqueHostel({
+      where: { id: hostel.id },
+      include: {
+        rooms: { include: { beds: true } },
+      },
+    });
 
+    if (!fullHostel) throw new CustomError("Hostel not found");
 
-});
+    results.push({
+      ...fullHostel,
+      spaceId,
+      createdAt: fullHostel.createdAt.toISOString(),
+      updatedAt: fullHostel.updatedAt.toISOString(),
+      gender: fullHostel.gender as Gender,
+      status: fullHostel.status as Status,
+      rooms: fullHostel.rooms.map(r => ({
+     ...r,
+     status: r.status as Status,
+      beds: r.beds.map(b => ({
+      ...b,
+      status: b.status as BedStatus,
+  })),
+})),
+    });
+  }
 
-if (!Hostel) throw new CustomError("Hostel not found");
-
-const formattedHostel = {
-  ...hostel,
-  createdAt: hostel.createdAt.toISOString(),
-  updatedAt: hostel.updatedAt.toISOString(),
-  gender: gender as Gender,
-  status: status as Status
- 
-  
+  return true;
 };
 
-
-return formattedHostel;
-  
-
-};
 
 createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
-  const { label, capacity, price, status, beds: roomBeds } = input;
+  const { label, capacity, status, beds: roomBeds } = input;
 
   // 1️⃣ Verify hostel exists
   const hostel = await this.hostelRepository.findUniqueHostel({
@@ -112,27 +121,34 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
     throw new CustomError("Hostel not found or does not belong to this space");
   }
 
+   // 2️⃣ Capacity validation
+  const beds: BedInput[] = roomBeds ?? [];
+  if (beds.length > capacity) {
+    throw new CustomError(
+      `Cannot create ${beds.length} bedspaces — exceeds room capacity of ${capacity}`
+    );
+  }
+
+  
+
   // 2️⃣ Create the room
   const room = await this.hostelRepository.createRoom({
     data: {
       label,
       capacity,
-      price: price ?? null,
       status: status ?? Status.Active,
       hostelId: hostel.id,
     },
   });
 
   // 3️⃣ Create beds if provided
-  const beds: BedInput[] = roomBeds ?? [];
   for (const bedInput of beds) {
     await this.hostelRepository.createBed({
       data: {
-        label: bedInput.label,
-        status: bedInput.status ?? BedStatus.Available,
-        classId: bedInput.classId ?? null,
-        amount: bedInput.amount,
-        roomId: room.id,
+      label: bedInput.label,
+      status: bedInput.status ?? BedStatus.Available,
+      amount: bedInput.amount,
+      roomId: room.id,
       },
     });
   }
@@ -162,30 +178,39 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
     },
   };
 
-  return formattedRoom;
+  return true;
 };
 
 createBed = async (input: BedInput, roomId: string, spaceId: string) => {
-  const { label, status, classId, amount } = input;
+  const { label, status, amount, hostelId } = input;
 
   // 1️⃣ Verify room exists and belongs to a hostel in this space
+  const hostel = await this.hostelRepository.findUniqueHostel({
+    where: { id: hostelId },
+    include: { space: true },
+  });
+
+   if (!hostel || hostel.spaceId !== spaceId) {
+    throw new CustomError("Hostel not found or does not belong to this space");
+  }
+
+   // 2️⃣ Verify that the room exists and belongs to that hostel
   const room = await this.hostelRepository.findUniqueRoom({
     where: { id: roomId },
     include: { hostel: true },
   });
 
-  if (!room || room.hostel.spaceId !== spaceId) {
-    throw new CustomError("Room not found or does not belong to this space");
+  if (!room || room.hostel.id !== hostelId) {
+    throw new CustomError("Room not found or does not belong to this hostel");
   }
 
   // 2️⃣ Create the bed
   const bed = await this.hostelRepository.createBed({
     data: {
       label,
-      status: status ?? BedStatus.Available,
-      classId: classId ?? null,
-      amount,
-      roomId: room.id,
+    status: status ?? BedStatus.Available,
+    amount,
+    roomId: room.id
     },
   });
 
@@ -194,7 +219,7 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
     where: { id: bed.id },
     include: {
       room: { include: { hostel: true, beds: true } },
-      class: true,
+      
     },
   });
 
@@ -219,16 +244,9 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
         status: createdBed.room.hostel.status as Status,
       },
     },
-    class: createdBed.class
-      ? {
-          ...createdBed.class,
-          createdAt: createdBed.class.createdAt.toISOString(),
-          updatedAt: createdBed.class.updatedAt.toISOString(),
-        }
-      : null,
   };
 
-  return formattedBed;
+  return true;
 };
 
  updateHostel = async (input: UpdateHostelInput, id: string, spaceId: string) => {
@@ -249,8 +267,7 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
       ...(input.name != null && { name: { set: input.name } }),
       ...(input.gender != null && { gender: { set: input.gender } }),
       ...(input.status != null && { status: { set: input.status } }),
-      ...(input.location != null && { location: { set: input.location } }),
-    },
+     },
     include: { rooms: { include: { beds: true, hostel: true } } },
   });
 
@@ -287,11 +304,21 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
  updateRoom = async (input: UpdateRoomInput, id: string, spaceId: string) => {
   const room = await this.hostelRepository.findUniqueRoom({
     where: { id },
-    include: { hostel: true },
+    include: { hostel: true, beds: true },
   });
 
   if (!room || room.hostel.spaceId !== spaceId) {
     throw new CustomError("Room not found in this space");
+  }
+
+  // Capacity check — only if updating capacity
+  if (input.capacity != null) {
+    const existingBedCount = room.beds?.length ?? 0;
+    if (input.capacity < existingBedCount) {
+      throw new CustomError(
+        `Cannot reduce room capacity to ${input.capacity} — there are already ${existingBedCount} beds in this room.`
+      );
+    }
   }
 
   const updated = await this.hostelRepository.updateRoom({
@@ -299,7 +326,6 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
     data: {
       ...(input.label != null && { label: input.label }),
       ...(input.capacity != null && { capacity: input.capacity }),
-      ...(input.price != null && { price: input.price }),
       ...(input.status != null && { status: input.status as Status }),
     },
     include: { beds: true, hostel: true },
@@ -343,12 +369,11 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
     data: {
       ...(input.label != null && { label: input.label }),
       ...(input.amount != null && { amount: input.amount }),
-      ...(input.status != null && { status: input.status as BedStatus }),
-      ...(input.classId != null && { classId: input.classId }),
+      ...(input.status != null && { status: input.status as BedStatus })
     },
     include: {
       room: { include: { hostel: true, beds: true } },
-      class: true,
+      
     },
   });
 
@@ -358,13 +383,6 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
   const formattedBed = {
     ...updated,
     status: updated.status as BedStatus,
-    class: updated.class
-      ? {
-          ...updated.class,
-          createdAt: updated.class.createdAt.toISOString(),
-          updatedAt: updated.class.updatedAt.toISOString(),
-        }
-      : null,
     room: {
       ...updated.room,
       status: updated.room.status as Status,
@@ -391,13 +409,26 @@ createStayType = async (
   startDate: string,
   endDate: string
 ) => {
+
+     const parseDate = (dateStr: string) => {
+    const [day, month, year] = dateStr.split("-").map(Number);
+    if (
+      typeof day !== "number" || isNaN(day) ||
+      typeof month !== "number" || isNaN(month) ||
+      typeof year !== "number" || isNaN(year)
+    ) {
+      throw new CustomError(`Invalid date string: ${dateStr}`);
+    }
+     return new Date(Date.UTC(year, month - 1, day)); // JS months are 0-indexed
+  };
+
   // 1️⃣ Create stay type in DB
   const stayType = await this.hostelRepository.createStayType({
     data: {
       spaceId,
       name,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate: parseDate(startDate),
+      endDate: parseDate(endDate),
     },
     include: {
       space: {
@@ -430,6 +461,7 @@ createStayType = async (
     },
     classes: space.classes.map(c => ({
       ...c,
+      names: Array.isArray(c.name) ? c.name : [],
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
     })),
@@ -543,10 +575,9 @@ publicHostels = async () => {
     id: h.id,
     name: h.name,
     gender: h.gender as Gender,
-    location: h.location ?? null,
     status: h.status as Status,
-    roomCount: h.roomCount,
-    availableBeds: h.availableBeds,
+    // roomCount: h.roomCount,
+    // availableBeds: h.availableBeds,
   }));
 };
 
@@ -564,10 +595,9 @@ publicHostel = async (id: string) => {
     id: hostel.id,
     name: hostel.name,
     gender: hostel.gender as Gender,
-    location: hostel.location ?? null,
     status: hostel.status as Status,
-    roomCount: hostel.roomCount,
-    availableBeds: hostel.availableBeds,
+    // roomCount: hostel.roomCount,
+    // availableBeds: hostel.availableBeds,
   };
 };
 
@@ -591,10 +621,9 @@ rooms = async (hostelId: string) => {
       id: hostel.id,
       name: hostel.name,
       gender: hostel.gender as Gender,
-      location: hostel.location ?? null,
       status: hostel.status as Status,
-      roomCount: hostel.roomCount,
-      availableBeds: hostel.availableBeds,
+      // roomCount: hostel.roomCount,
+      // availableBeds: hostel.availableBeds,
       createdAt: hostel.createdAt.toISOString(),      // ✅ add this
       updatedAt: hostel.updatedAt.toDateString(),      // ✅ add this
     },
@@ -694,7 +723,6 @@ bed = async (bedId: string) => {
       label: bed.room.label,
       status: bed.room.status as Status,
       hostelId: bed.room.hostelId,
-      price: bed.room.price,
       capacity: bed.room.capacity,
       beds: [], // remove recursive beds
       hostel: {
@@ -744,6 +772,7 @@ getStayTypes = async (spaceId: string) => {
       },
       classes: space.classes.map(c => ({
         ...c,
+          names: Array.isArray(c.name) ? c.name : [],
         createdAt: c.createdAt.toISOString(),
         updatedAt: c.updatedAt.toISOString(),
       })),
@@ -807,6 +836,7 @@ getStayType = async (id: string) => {
     },
     classes: space.classes.map(c => ({
       ...c,
+        names: Array.isArray(c.name) ? c.name : [],
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
     })),

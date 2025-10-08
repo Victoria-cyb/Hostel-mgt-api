@@ -29,7 +29,7 @@ export interface Application {
   student: User;
   bed?: Bed;
   status: ApplicationStatus;
-  amount: number;
+  amount?: number;
   currency: string;
   startDate?: TypeOrNull<string>;
   endDate?: TypeOrNull<string>;
@@ -65,7 +65,6 @@ export interface ApplyInput {
   startDate?: TypeOrNull<string>;
   endDate?: TypeOrNull<string>;
   stayTypeId?: TypeOrNull<string>;
-  amount: number;
   currency: string;
   academicSession?: TypeOrNull<string>;
   academicTerm?: TypeOrNull<string>;

@@ -45,6 +45,12 @@ type SimpleSpaceInfo {
 type SpaceUser {
   id: ID!
   user: User!
+  firstName: String!
+  lastName: String!
+  email: String
+  phone: String
+  gender: Gender
+  image: String
   role: String!
   space: SimpleSpaceInfo!
   createdAt: DateTime!
@@ -55,7 +61,7 @@ type SpaceUser {
 type Class {
   id: ID!
   space: Space
-  name: String!
+  names: [String!]!
   createdAt: String!
 
 
@@ -90,7 +96,7 @@ extend type Query {
 
 extend type Mutation {
   createSpace(input: CreateSpaceInput!): Space!
-  createSpaceUser(input: CreateSpaceUserInput!, spaceId: ID!): SpaceUser! @auth   @spaceAuth(requires: [admin])
+  createSpaceUsers(inputs: [CreateSpaceUserInput!]!, spaceId: ID!): [SpaceUser!]! @auth   @spaceAuth(requires: [admin])
   linkParentToStudent(spaceId: ID!, parentId: ID!, studentId: ID!): Boolean! @auth   @spaceAuth(requires: [admin])
-  createClass(spaceId: ID!, name: String!): Class! @auth   @spaceAuth(requires: [admin])
+  createClass(spaceId: ID!, names: [String!]!): Boolean! @auth   @spaceAuth(requires: [admin])
 }

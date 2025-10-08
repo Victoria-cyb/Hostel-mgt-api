@@ -41,7 +41,6 @@ import { BedStatus} from "../types/hostel";
     startDate,
     endDate,
     stayTypeId,
-    amount,
     currency,
     academicSession,
     academicTerm,
@@ -80,7 +79,6 @@ import { BedStatus} from "../types/hostel";
       studentId,
       bedId,
       status: ApplicationStatus.Pending,
-      amount,
       currency,
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
@@ -123,12 +121,12 @@ import { BedStatus} from "../types/hostel";
         updatedAt: app.updatedAt?.toISOString() ?? null,
       })),
     },
-    payments: application.payments.map(p => ({
-      ...p,
-      createdAt: p.createdAt.toISOString(),
-      updatedAt: p.updatedAt?.toISOString() ?? null,
-      status: p.status as PaymentStatus,
-    })),
+    // payments: application.payments.map(p => ({
+    //   ...p,
+    //   createdAt: p.createdAt.toISOString(),
+    //   updatedAt: p.updatedAt?.toISOString() ?? null,
+    //   status: p.status as PaymentStatus,
+    // })),
   };
 };
 
@@ -142,7 +140,6 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
       startDate,
       endDate,
       stayTypeId,
-      amount,
       currency,
       academicSession,
       academicTerm,
@@ -158,10 +155,27 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
       throw new CustomError("Student user not found in this space");
     }
 
-    const bed = await this.hostelRepository.findBed({ where: { id: bedId } });
-   if (!bed) {
-  throw new CustomError("Bed not found");
-   }
+    // Check bed availability
+      const bed = await this.hostelRepository.findUniqueBed({
+        where: { id: bedId },
+        include: { applications: true }, // Include applications to check booking status
+      });
+      if (!bed) {
+        throw new CustomError("Bed not found");
+      }
+      if (
+        bed.applications?.some(
+          (app) =>
+            app.status === ApplicationStatus.Pending ||
+            app.status === ApplicationStatus.Approved
+        )
+      ) {
+        throw new CustomError("Bed already booked or allocated");
+      }
+
+  
+
+   
 
 
     const applicationNumber = `APP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -169,11 +183,10 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
     const application = await this.applicationRepository.createApplication({
       data: {
         id: randomUUID(),
-        applicationNumber,
+        applicationNumber,  
         studentId,
         bedId,
         status: ApplicationStatus.Pending,
-        amount,
         currency,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
@@ -204,19 +217,19 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
       createdBy: application.createdBy as AllocationSource,
       createdAt: application.createdAt.toISOString(),
       updatedAt: application.updatedAt?.toISOString() ?? null,
-      bed: application.bed
-    ? {
-        ...application.bed,
-        status: application.bed.status as BedStatus,
-      }
-    : null,
+    //   bed: application.bed
+    // ? {
+    //     ...application.bed,
+    //     status: application.bed.status as BedStatus,
+    //   }
+    // : null,
 
-      payments: application.payments?.map((p) => ({
-    ...p,
-    createdAt: p.createdAt.toISOString(),
-    updatedAt: p.updatedAt.toISOString(),
-    status: p.status as PaymentStatus,
-  })) ?? [],
+  //     payments: application.payments?.map((p) => ({
+  //   ...p,
+  //   createdAt: p.createdAt.toISOString(),
+  //   updatedAt: p.updatedAt.toISOString(),
+  //   status: p.status as PaymentStatus,
+  // })) ?? [],
   
     });
   }
@@ -288,8 +301,17 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
     throw new CustomError("Application not found");
   }
 
+  // 2. Check for existing payments
+  const existingPayment = await this.paymentRespository.findPayment({
+    where: { applicationId: application.id },
+  });
+
+  
+
   // 2. Generate payment reference
   const reference = `PAY-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  if (application.amount === null) throw new CustomError("Application amount not set");
 
   // 3. Initialize Paystack
   const paystackResponse = await initializePaystackPayment({
@@ -344,13 +366,14 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
     });
 
     if (!application) throw new CustomError("Application not found");
+    if (application.amount === null) throw new CustomError("Application amount not set");
 
     const payment = await this.paymentRespository.createPayment({
       data: {
         id: randomUUID(),
         applicationId: application.id,
         reference: `offline_${Date.now()}`,
-        amount: application.amount,
+        amount: application.amount ,
         currency: application.currency,
         status,
         method: "offline",

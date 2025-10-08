@@ -16,8 +16,7 @@ type PublicHostel {
   gender: Gender!
   location: String
   status: status!
-  roomCount: Int!
-  availableBeds: Int!
+ 
 }
 
 # ========== BASE ENTITIES ==========
@@ -27,7 +26,6 @@ type Hostel {
   space: Space
   name: String!
   gender: Gender!
-  location: String
   status: status!
   rooms: [Room!]
   createdAt: String!
@@ -38,7 +36,6 @@ type Room {
   hostel: Hostel
   label: String!
   capacity: Int!
-  price: Int
   status: status!
   beds: [Bed!]!
 }
@@ -48,7 +45,6 @@ type Bed {
   room: Room
   label: String!
   status: BedStatus!
-  class: Class
   amount: Int!
   currentAllocation: Allocation
 }
@@ -64,23 +60,21 @@ type StayType {
 # ========== INPUTS ==========
 input BedInput {
   label: String!
-  status: BedStatus
-  classId: ID
+ status: BedStatus
   amount: Int!
+  hostelId: ID 
 }
 
 input RoomInput {
   label: String!
   capacity: Int!
-  price: Int
-  status: status
+status: status
   beds: [BedInput!]
 }
 
 input HostelInput {
   name: String!
   gender: Gender!
-  location: String
   status: status
   rooms: [RoomInput!]
 }
@@ -88,22 +82,19 @@ input HostelInput {
 input UpdateHostelInput {
   name: String
   gender: Gender
-  location: String
   status: status
 }
 
 input UpdateRoomInput {
   label: String
   capacity: Int
-  price: Int
-  status: status
+status: status
 }
 
 input UpdateBedInput {
   label: String
   status: BedStatus
-  classId: ID
-  amount: Int
+amount: Int
 }
 
 # ========== HOSTEL QUERIES ==========
@@ -122,9 +113,9 @@ extend type Query {
 
 # ========== HOSTEL MUTATIONS ==========
 extend type Mutation {
-  createHostel(spaceId: ID!, input: HostelInput!): Hostel! @auth @spaceAuth(requires: [admin])
-  createRoom(spaceId: ID!, hostelId: ID!, input: RoomInput!): Room! @auth @spaceAuth(requires: [admin])
-  createBed(spaceId: ID!, roomId: ID!, input: BedInput!): Bed! @auth @spaceAuth(requires: [admin])
+  createHostel(spaceId: ID!, input: [HostelInput!]!): Boolean! @auth @spaceAuth(requires: [admin])
+  createRoom(spaceId: ID!, hostelId: ID!, input: RoomInput!): Boolean! @auth @spaceAuth(requires: [admin])
+  createBed(spaceId: ID!, roomId: ID!, input: BedInput!): Boolean! @auth @spaceAuth(requires: [admin])
   updateHostel(spaceId: ID!, id: ID!, input: UpdateHostelInput!): Hostel! @auth @spaceAuth(requires: [admin])
   updateRoom(spaceId: ID!, id: ID!, input: UpdateRoomInput!): Room! @auth @spaceAuth(requires: [admin])
   updateBed(spaceId: ID!,id: ID!, input: UpdateBedInput!): Bed! @auth @spaceAuth(requires: [admin])
