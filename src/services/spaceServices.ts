@@ -6,6 +6,7 @@ import { encrypt } from "../utils/auth";
 import { CustomError } from "../utils/error";
 
 
+
 class SpaceService {
     private spaceRepository: SpaceRepository;
     private userRespository: UserRepository;
@@ -36,6 +37,12 @@ class SpaceService {
         userId: creatorId,
         spaceId: newSpace.id,
         role: SpaceRole.Admin,
+        firstName: "System",
+        lastName: "Admin",
+        email:"admin@system.local",
+        phone: null,
+        gender: null,
+        image: null,
       },
     });
 
@@ -51,16 +58,11 @@ class SpaceService {
           : newSpace.updatedAt,
     };
   };
+  
+createSpaceUsers = async (inputs: CreateSpaceUserInput[], spaceId: string) => {
+  const results = [];
 
-
-    createSpaceUser = async (input: CreateSpaceUserInput, spaceId: string) => {
-
-    //   const roleEnum: SpaceRole = SpaceRole[input.role.toLowerCase() as keyof typeof SpaceRole];
-
-    //   if (!roleEnum) {
-    //   throw new CustomError(`Invalid role: ${input.role}`);
-    //  }
-
+  for (const input of inputs) {
     const {
       firstName,
       lastName,
@@ -72,18 +74,40 @@ class SpaceService {
       classId,
       parentId: inputParentId,
       role,
+      studentId,
     } = input;
 
-    // Check if user already exists
-   let user = email
-    ? await this.userRespository.findUserByEmail({ where: { email } })
-    : null;
+    if (role === SpaceRole.Student && !classId) {
+      throw new CustomError("A classId is required when creating a student.");
+    }
+
+    // Validate studentId for parent role
+      if (role === SpaceRole.Parent && studentId && studentId.length > 0) {
+        for (const sid of studentId) {
+         
+          const studentSpaceUser = await this.spaceRepository.findSpaceUser({
+            where: { id: sid as string, spaceId, role: SpaceRole.Student },
+          });
+          if (!studentSpaceUser) {
+            throw new CustomError(`Student with ID ${sid} not found or not a student in this space`);
+          }
+        }
+      }
+
+
+
+    
+
+    let user = email
+      ? await this.userRespository.findUserByEmail({ where: { email } })
+      : null;
+    
+    
 
     if (!user) {
-      // Hash password
       const hashedPassword = await encrypt(password);
-    const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const username = `${firstName.toLowerCase()}${randomDigits}`;
+      const randomDigits = Math.floor(1000 + Math.random() * 9000);
+      const username = `${firstName.toLowerCase()}${randomDigits}`;
 
       user = await this.userRespository.createUser({
         data: {
@@ -93,82 +117,132 @@ class SpaceService {
           phone: phone ?? null,
           gender,
           image: image ?? null,
-          username: email || `${firstName.toLowerCase()}_${Date.now()}`,
+          username,
           password: hashedPassword,
-          
         },
         include: {
           spaces: true,
-        }
+        },
       });
     }
 
     const existingSpaceUser = await this.spaceRepository.findSpaceUser({
-    where: {
-      spaceId,
-      userId: user.id,
-    },
-  });
-
-  if (existingSpaceUser) {
-    throw new CustomError("User is already a member of this space");
-  }
-
-  let parentId: string | null = null;
-
-  if (role === SpaceRole.Parent) {
-    parentId = null;
-  }
-
-  if (role === SpaceRole.Student && inputParentId) {
-    const parentSpaceUser = await this.spaceRepository.findSpaceUser({
-      where: { id: inputParentId, spaceId },
-      include: { user: true },
+      where: {
+        spaceId,
+        userId: user.id,
+      },
     });
 
-    if (!parentSpaceUser || parentSpaceUser.role !== SpaceRole.Parent) {
-      throw new CustomError("Parent user not found or not a parent");
+    if (existingSpaceUser) {
+      throw new CustomError(`User ${firstName} ${lastName} already a member of this space`);
     }
 
-    parentId = parentSpaceUser.id;
-  }
+    let parentId: string | null = null;
 
-  
+    if (role === SpaceRole.Parent) {
+      parentId = null;
+    }
 
-    // Create SpaceUser relation
+    if (role === SpaceRole.Student && inputParentId) {
+      const parentSpaceUser = await this.spaceRepository.findSpaceUser({
+        where: { id: inputParentId, spaceId },
+        include: { user: true },
+      });
+
+      if (!parentSpaceUser || parentSpaceUser.role !== SpaceRole.Parent) {
+        throw new CustomError("Parent user not found or not a parent");
+      }
+
+      parentId = parentSpaceUser.id;
+    }
+
+
+
     const spaceUser = await this.spaceRepository.createSpaceUser({
       data: {
         userId: user.id,
-        spaceId,
+        spaceId: spaceId,
         role: input.role as SpaceRole,
         classId: classId ?? null,
-        parentId: parentId ?? null,
+        parentId,
+        firstName,
+        lastName,
+        email: email ?? null,
+        phone: phone ?? null,
+        gender: gender ?? null,
+        image: image ?? null,
+        
       },
       include: {
         user: true,
         space: true,
+        students: true
       },
     });
 
-    return {
-      ...spaceUser,
+    // Handle parent role: link to students if studentId array is provided
+    if (role === SpaceRole.Parent && studentId && studentId.length > 0) {
+      for (const sid of studentId) {
+        // Update each student's parentId to link to this parent
+        await this.spaceRepository.updateSpaceUser({
+          where: { id: sid as string, spaceId },
+          data: {
+            parentId: spaceUser.id,
+          },
+        });
+      }
+    }
+
+    
+
+    // ✅ Fix: Properly map the return type to match GraphQL expectations
+    results.push({
+      id: spaceUser.id,
+      userId: spaceUser.userId,
+      spaceId: spaceUser.spaceId,
+      role: spaceUser.role,
+      classId: spaceUser.classId,
+      parentId: spaceUser.parentId,
+      firstName: spaceUser.firstName,
+      lastName: spaceUser.lastName,
+      email: spaceUser.email,
+      phone: spaceUser.phone,
+      gender: spaceUser.gender as Gender, // This should be Gender | null
+      image: spaceUser.image,
       user: {
-        ...spaceUser.user,
-        gender: spaceUser.user.gender as Gender,
-       resetOtpExpiry: spaceUser.user.resetOtpExpiry
-      ? spaceUser.user.resetOtpExpiry.toISOString()
-      : null,
+        id: spaceUser.user.id,
+        role: spaceUser.user.role,
+        firstName: spaceUser.user.firstName,
+        lastName: spaceUser.user.lastName,
+        email: spaceUser.user.email,
+        phone: spaceUser.user.phone,
+        gender: spaceUser.user.gender as Gender, // This should be Gender | null
+        image: spaceUser.user.image,
+        username: spaceUser.user.username,
+        password: spaceUser.user.password,
+        resetOtp: spaceUser.user.resetOtp,
+        resetOtpExpiry: spaceUser.user.resetOtpExpiry
+          ? spaceUser.user.resetOtpExpiry.toISOString()
+          : null,
+        createdAt: spaceUser.user.createdAt.toISOString(),
+        updatedAt: spaceUser.user.updatedAt.toISOString(),
       },
-      createdAt:
-        spaceUser.createdAt instanceof Date
-          ? spaceUser.createdAt.toISOString()
-          : spaceUser.createdAt,
-      updatedAt:
-        spaceUser.updatedAt instanceof Date
-          ? spaceUser.updatedAt.toISOString()
-          : spaceUser.updatedAt,
-    };
-  };
+      space: {
+        id: spaceUser.space.id,
+        name: spaceUser.space.name,
+      },
+      createdAt: spaceUser.createdAt instanceof Date
+        ? spaceUser.createdAt.toISOString()
+        : spaceUser.createdAt,
+      updatedAt: spaceUser.updatedAt instanceof Date
+        ? spaceUser.updatedAt.toISOString()
+        : spaceUser.updatedAt,
+    });
+  }
+   console.log(results)
+  return results;
+};
+
 
   getSpaceById = async (id: string) => {
   const space = await this.spaceRepository.findSpaceById({
@@ -242,6 +316,13 @@ class SpaceService {
   mappedSpace.users = (space.spaceUsers ?? []).map((su: any) => ({
     id: su.id,
     role: su.role,
+
+  firstName: su.firstName ?? su.user?.firstName ?? "",
+  lastName: su.lastName ?? su.user?.lastName ?? "",
+  email: su.email ?? su.user?.email ?? null,
+  phone: su.phone ?? su.user?.phone ?? null,
+  gender: su.gender ?? su.user?.gender ?? null,
+  image: su.image ?? su.user?.image ?? null,
     user: {
       id: su.user?.id ?? su.userId ?? "", // depending on include
       firstName: su.user?.firstName ?? "",
@@ -321,25 +402,29 @@ class SpaceService {
     return true;
   };
 
-   createClass = async (spaceId: string, name: string) => {
-    const space = await this.spaceRepository.findSpaceById({
-      where: { id: spaceId },
-      include: { createdBy: true },
-    });
-    if (!space) throw new CustomError("Space not found");
+ 
+  createClass = async (spaceId: string, names: string[]) => {
+  const space = await this.spaceRepository.findSpaceById({
+    where: { id: spaceId },
+    include: { createdBy: true },
+  });
+  if (!space) throw new CustomError("Space not found");
 
+  const createdClasses = [];
+
+  for (const name of names) {
     const newClassInstance = await this.spaceRepository.createClass({
       data: { name, spaceId, createdAt: new Date() },
       include: { space: { include: { createdBy: true } } },
     });
 
-    return {
+    createdClasses.push({
       ...newClassInstance,
       createdAt:
         newClassInstance.createdAt instanceof Date
           ? newClassInstance.createdAt.toISOString()
           : newClassInstance.createdAt,
-    
+
       space: {
         id: space.id,
         name: space.name,
@@ -363,8 +448,12 @@ class SpaceService {
         hostels: [],
         stayTypes: [],
       },
-    };
-  };
+    });
+  }
+
+  return true;
+};
+
 
   getSpacesForUser = async (userId: string) => {
     const spaceUsers = await this.spaceRepository.findSpaceUsers({
@@ -418,8 +507,8 @@ class SpaceService {
         name: h.name,
         gender: h.gender as Gender,
         status: h.status as Status,
-        roomCount: h.roomCount,
-        availableBeds: h.availableBeds,
+        // roomCount: h.roomCount,
+        // availableBeds: h.availableBeds,
       })),
     }));
   };
@@ -442,8 +531,8 @@ class SpaceService {
         name: h.name,
         gender: h.gender as Gender,
         status: h.status as Status,
-        roomCount: h.roomCount,
-        availableBeds: h.availableBeds,
+        // roomCount: h.roomCount,
+        // availableBeds: h.availableBeds,
       })),
     };
   };
@@ -460,7 +549,7 @@ class SpaceService {
 
     return classesRaw.map((c) => ({
       id: c.id,
-      name: c.name,
+      names: c.name ? [c.name] : [],
       createdAt:
         c.createdAt instanceof Date ? c.createdAt.toISOString() : c.createdAt,
       username: c.name.replace(/\s+/g, "").toLowerCase(),
@@ -502,7 +591,7 @@ class SpaceService {
 
     return {
       id: c.id,
-      name: c.name,
+      names: c.name ? [c.name] : [],
       createdAt:
         c.createdAt instanceof Date ? c.createdAt.toISOString() : c.createdAt,
       space: {

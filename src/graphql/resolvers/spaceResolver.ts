@@ -1,6 +1,6 @@
 import SpaceService from "../../services/spaceServices";
 import { handleGqlError } from "../../utils/error";
-import type { Resolvers } from "../types/graphql";
+import type { CreateSpaceUserInput, Resolvers } from "../types/graphql";
 
 
 const spaceService = new SpaceService()
@@ -82,13 +82,13 @@ const SPACE_RESOLVER: Resolvers = {
             }
         },
 
-        createSpaceUser: async (_, {input, spaceId}) => {
-            try {
-                return await spaceService.createSpaceUser(input, spaceId);
-            } catch (error) {
-                return handleGqlError ({error})
-            }
-        },
+       createSpaceUsers: async (_, {inputs, spaceId}) => {
+    try {
+      return await spaceService.createSpaceUsers(inputs, spaceId);
+    } catch (error) {
+      return handleGqlError({ error });
+    }
+  },
 
         linkParentToStudent: async (_, { spaceId, parentId, studentId }) => {
       try {
@@ -102,20 +102,14 @@ const SPACE_RESOLVER: Resolvers = {
       }
     },
 
-     createClass: async (_, { spaceId, name }) => {
+    createClass: async (_, { spaceId, names }) => {
       try {
-        const newClass = await spaceService.createClass(spaceId, name);
-
-        const formatDate = (date: string | Date) =>
-          date instanceof Date ? date.toISOString() : date;
-        return {
-          ...newClass,
-          createdAt: formatDate(newClass.createdAt),
-        };
+        return await spaceService.createClass(spaceId, names)
       } catch (error) {
-        return handleGqlError({ error });
+        return handleGqlError({error})
       }
     },
+
 
        
     }

@@ -90,7 +90,7 @@ const HOSTEL_RESOLVERS: Resolvers = {
     Mutation: {
           createHostel: async (_, { input, spaceId }) => {
       try {
-        return await hostelService.createHostel( input, spaceId);
+        return await hostelService.createHostels( input, spaceId);
       } catch (error) {
         return handleGqlError({ error });
       }

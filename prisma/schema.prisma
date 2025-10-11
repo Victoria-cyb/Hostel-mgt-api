@@ -87,12 +87,10 @@ model Hostel {
   id        String   @id @default(uuid())
   name      String
   gender    Gender
-  location  String?
   status    Status   @default(active)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  roomCount     Int
-  availableBeds Int
+  
 
   // Foreign Keys
   spaceId String
@@ -111,7 +109,6 @@ model Room {
   id       String  @id @default(uuid())
   label    String
   capacity Int
-  price    Int?
   status   Status  @default(active)
 
   // Foreign Keys
@@ -135,9 +132,7 @@ model Bed {
   // Foreign Keys
   roomId  String
   room    Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  classId String?
-  class   Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
-
+ 
   // Relations
   applications     Application[]
   allocations      Allocation[]
@@ -145,7 +140,6 @@ model Bed {
 
   @@index([roomId])
   @@index([status])
-  @@index([classId])
   @@map("beds")
 }
 
@@ -180,7 +174,7 @@ model Class {
 
   // Relations
   spaceUsers SpaceUser[]
-  beds       Bed[]
+
 
   @@index([spaceId])
   @@map("classes")
@@ -189,6 +183,12 @@ model Class {
 model SpaceUser {
   id       String      @id @default(uuid())
   role     SpaceRole
+  firstName String
+  lastName  String
+  email     String?     @unique
+  phone     String?
+  gender    Gender?
+  image     String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -252,7 +252,7 @@ model Application {
   id                String            @id @default(uuid())
   applicationNumber String            @unique @default(uuid())
   status            ApplicationStatus @default(pending)
-  amount            Float
+  amount            Float?
   currency          String
   startDate         DateTime?
   endDate           DateTime?
