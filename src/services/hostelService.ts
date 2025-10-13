@@ -184,6 +184,8 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
 createBed = async (input: BedInput, roomId: string, spaceId: string) => {
   const { label, status, amount, hostelId } = input;
 
+  if (!hostelId) throw new CustomError("Hostel ID is required");
+
   // 1️⃣ Verify room exists and belongs to a hostel in this space
   const hostel = await this.hostelRepository.findUniqueHostel({
     where: { id: hostelId },

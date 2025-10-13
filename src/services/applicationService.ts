@@ -217,19 +217,19 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
       createdBy: application.createdBy as AllocationSource,
       createdAt: application.createdAt.toISOString(),
       updatedAt: application.updatedAt?.toISOString() ?? null,
-    //   bed: application.bed
-    // ? {
-    //     ...application.bed,
-    //     status: application.bed.status as BedStatus,
-    //   }
-    // : null,
+      bed: application.bed
+    ? {
+        ...application.bed,
+        status: application.bed.status as BedStatus,
+      }
+    : null,
 
-  //     payments: application.payments?.map((p) => ({
-  //   ...p,
-  //   createdAt: p.createdAt.toISOString(),
-  //   updatedAt: p.updatedAt.toISOString(),
-  //   status: p.status as PaymentStatus,
-  // })) ?? [],
+      payments: application.payments?.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+    status: p.status as PaymentStatus,
+  })) ?? [],
   
     });
   }

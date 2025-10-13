@@ -73,7 +73,7 @@ export interface BedInput {
   label: string;
  status?: TypeOrNull<BedStatus>;
   amount: number;
-  hostelId: string   
+  hostelId?: string | null
 }
 
 export interface HostelInput {

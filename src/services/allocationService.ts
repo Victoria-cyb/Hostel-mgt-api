@@ -30,7 +30,6 @@ class AllocationService {
                     studentId: input.studentId,
                     bedId: input.bedId,
                     status: ApplicationStatus.Approved,
-                    amount: input.amount,
                     currency: input.currency,
                     startDate: input.startDate ? new Date(input.startDate) : null,
                     endDate: input.endDate ? new Date(input.endDate) : null,
