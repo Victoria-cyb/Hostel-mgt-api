@@ -24,7 +24,6 @@ export interface PublicHostel {
   id: string;
   name: string;
   gender: Gender;
-  location?: TypeOrNull<string>;
   status: Status;
   // roomCount: number;
   // availableBeds: number;

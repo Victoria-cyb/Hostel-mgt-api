@@ -199,11 +199,18 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
    // 2️⃣ Verify that the room exists and belongs to that hostel
   const room = await this.hostelRepository.findUniqueRoom({
     where: { id: roomId },
-    include: { hostel: true },
+    include: { hostel: true, beds: true },
   });
 
   if (!room || room.hostel.id !== hostelId) {
     throw new CustomError("Room not found or does not belong to this hostel");
+  }
+
+    // ✅ Capacity validation
+  if (room.beds.length >= room.capacity) {
+    throw new CustomError(
+      `Cannot create new bed — room '${room.label}' has reached its capacity of ${room.capacity}`
+    );
   }
 
   // 2️⃣ Create the bed

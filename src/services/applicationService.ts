@@ -38,10 +38,7 @@ import { BedStatus} from "../types/hostel";
   const {
     studentId,
     bedId,
-    startDate,
-    endDate,
     stayTypeId,
-    currency,
     academicSession,
     academicTerm,
   } = input;
@@ -61,8 +58,8 @@ import { BedStatus} from "../types/hostel";
   if (
     bed.applications?.some(
       (app) =>
-        app.status === ApplicationStatus.Pending ||
-        app.status === ApplicationStatus.Approved
+        (app.status === ApplicationStatus.Pending ||
+        app.status === ApplicationStatus.Approved) && app.academicSession === academicSession && app.academicTerm === academicTerm
     )
   ) {
     throw new CustomError("Bed already booked or allocated");
@@ -71,6 +68,11 @@ import { BedStatus} from "../types/hostel";
   // ✅ Generate application number
   const applicationNumber = `APP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+  const amount =
+  bed.amount ??
+  0; // fallback to 0 or throw if you prefer strict validation
+
+
   // ✅ Create application
   const application = await this.applicationRepository.createApplication({
     data: {
@@ -78,10 +80,9 @@ import { BedStatus} from "../types/hostel";
       applicationNumber,
       studentId,
       bedId,
+      amount,
+      currency: 'NGN',
       status: ApplicationStatus.Pending,
-      currency,
-      startDate: startDate ? new Date(startDate) : null,
-      endDate: endDate ? new Date(endDate) : null,
       stayTypeId: stayTypeId ?? null,
       academicSession: academicSession ?? null,
       academicTerm: academicTerm ?? null,
@@ -121,12 +122,12 @@ import { BedStatus} from "../types/hostel";
         updatedAt: app.updatedAt?.toISOString() ?? null,
       })),
     },
-    // payments: application.payments.map(p => ({
-    //   ...p,
-    //   createdAt: p.createdAt.toISOString(),
-    //   updatedAt: p.updatedAt?.toISOString() ?? null,
-    //   status: p.status as PaymentStatus,
-    // })),
+    payments: application.payments.map(p => ({
+      ...p,
+      createdAt: p.createdAt.toISOString(),
+      updatedAt: p.updatedAt?.toISOString() ?? null,
+      status: p.status as PaymentStatus,
+    })),
   };
 };
 
@@ -137,10 +138,7 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
     const {
       studentId,
       bedId,
-      startDate,
-      endDate,
       stayTypeId,
-      currency,
       academicSession,
       academicTerm,
     } = input;
@@ -179,17 +177,19 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
 
 
     const applicationNumber = `APP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+     const amount =
+  bed.amount ??
+  0; // fallback to 0 or throw if you prefer strict validation
 
     const application = await this.applicationRepository.createApplication({
       data: {
         id: randomUUID(),
         applicationNumber,  
         studentId,
+        amount,
         bedId,
         status: ApplicationStatus.Pending,
-        currency,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
+        currency: "NGN",
         stayTypeId: stayTypeId ?? null,
         academicSession: academicSession ?? null,
         academicTerm: academicTerm ?? null,
@@ -205,7 +205,6 @@ parentBulkBook = async (inputs: ApplyInput[], spaceId: string) => {
       applicationNumber: application.applicationNumber,
       studentId: application.studentId,
       bedId: application.bedId,
-
       status: application.status as ApplicationStatus,
       amount: application.amount,
       currency: application.currency,
@@ -598,6 +597,21 @@ payments = async (
     updatedAt: payment.updatedAt?.toISOString() ?? null,
   };
 };
+
+deleteApplication = async (applicationId: string) => {
+  const existingApp = await this.applicationRepository.findApplication({
+    where: { id: applicationId },
+  });
+
+  if (!existingApp) throw new CustomError("Application not found");
+
+  await this.applicationRepository.deleteApplication({
+    where: { id: applicationId },
+  });
+
+  return true;
+};
+
 
 
 }

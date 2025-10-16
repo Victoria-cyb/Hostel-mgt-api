@@ -55,13 +55,14 @@ type Payment {
 # ========== INPUTS ==========
 input ApplyInput {
   studentId: ID!
+  hostelId: ID!
+  roomId: ID!
   bedId: ID!
-  startDate: String
-  endDate: String
-  stayTypeId: ID
-  currency: String!
+  stayTypeId: ID!
   academicSession: String
   academicTerm: String
+  
+  
 }
 
 input ApplicationFilter {
@@ -91,4 +92,5 @@ extend type Mutation {
   payHostelFee(applicationNumber: String!, spaceId: ID!): Payment! @auth @spaceAuth(requires: [student, parent])
   recordPayment(applicationNumber: String!, status: PaymentStatus!, spaceId: ID!): Payment! @auth @spaceAuth(requires: [admin])
   verifyPayment(reference: String!, spaceId: ID!): Boolean! @auth @spaceAuth(requires: [admin])
+  deleteApplication(applicationId: String!, spaceId: ID!): Boolean @auth @spaceAuth(requires: [student, parent])
 }

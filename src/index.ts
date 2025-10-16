@@ -37,6 +37,7 @@ class Server {
                     if (token) {
                         try {
                             const payload = decodeToken(token, process.env.LOGIN_SECRET!);
+                             
                             userId = payload?.userId ?? null; // Adjust to your JWT payload structure
                         } catch (err) {
                             console.warn("Invalid token:", (err as Error).message);
