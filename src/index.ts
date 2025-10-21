@@ -4,7 +4,7 @@ import express from "express";
 import cors from "cors";
 import apolloServer from "./graphql/setup.js";
 import { expressMiddleware } from "@as-integrations/express5"; 
-import { getToken, decodeToken } from "./utils/token";
+import { getToken, decodeToken } from "./utils/token.js";
 
 class Server {
     private app: express.Application;
