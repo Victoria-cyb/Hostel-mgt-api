@@ -1,10 +1,10 @@
 import { ApolloServer } from "@apollo/server";
-import { authDirective } from "./directives/authDirective";
-import { spaceDirective } from "./directives/spaceDirectives";
+import { authDirective } from "./directives/authDirective.js";
+import { spaceDirective } from "./directives/spaceDirectives.js";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { readGqlSchemas } from "./types";
-import RESOLVERS from "./resolvers/indexResolver";
+import { readGqlSchemas } from "./types/index.js";
+import RESOLVERS from "./resolvers/indexResolver.js";
 
 const { authDirectiveTypeDefs, authDirectiveTransformer } =
   authDirective("auth");
