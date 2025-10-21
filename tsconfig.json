@@ -1,41 +1,76 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Modules */
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    "moduleDetection": "force",
+
+    /* Emit */
     "outDir": "./dist",
-    "baseUrl": "./src",
-    
-    "module": "NodeNext",
-    "target": "ESNext",
-    "types": ["node"],
-    
+    "rootDir": "./src",
+    "removeComments": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,           // Add this
-    "allowSyntheticDefaultImports": true, // Add this
-    
-    "noImplicitAny": true,
-    
-    "strict": true,
-    "jsx": "react-jsx",
-    // "verbatimModuleSyntax": true,   // Remove or comment out this line
+
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
-  },
-  "include": ["./src"],
-  "tsc-alias": {
-    "verbose": false,
-    "resolveFullPaths": true,
-    "fileExtensions": {
-      "inputGlob": "{js,jsx,mjs}",
-      "outputCheck": ["js", "json", "jsx", "mjs"]
+
+    /* Type Checking - Strict Mode */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    /* Additional Type Checking */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false,
+
+    /* Completeness */
+    "skipLibCheck": true,
+
+    /* Path Mapping (if you're using aliases) */
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"],
+      "@graphql/*": ["./graphql/*"],
+      "@utils/*": ["./utils/*"],
+      "@types/*": ["./types/*"],
+      "@resolvers/*": ["./resolvers/*"],
+      "@directives/*": ["./directives/*"]
     }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

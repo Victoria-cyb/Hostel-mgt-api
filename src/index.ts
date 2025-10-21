@@ -2,9 +2,9 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
-import apolloServer from "./graphql/setup.js";
+import apolloServer from "./graphql/setup";
 import { expressMiddleware } from "@as-integrations/express5"; 
-import { getToken, decodeToken } from "./utils/token.js";
+import { getToken, decodeToken } from "./utils/token";
 
 class Server {
     private app: express.Application;

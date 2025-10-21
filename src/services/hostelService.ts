@@ -1,6 +1,6 @@
 
 import { HostelRepository } from "../repositories/hostel";
-import { Status, type HostelInput, type RoomInput, type BedInput, BedStatus, type UpdateHostelInput, type UpdateRoomInput, type UpdateBedInput, type StayType, type Hostel } from "../types/hostel";
+import { Status, type HostelInput, type RoomInput, type BedInput, BedStatus, type UpdateHostelInput, type UpdateRoomInput, type UpdateBedInput} from "../types/hostel";
 import { Gender } from "../types/user";
 import { CustomError } from "../utils/error";
 
@@ -131,7 +131,7 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
 
   
 
-  // 2️⃣ Create the room
+  // 3️⃣ Create the room
   const room = await this.hostelRepository.createRoom({
     data: {
       label,
@@ -141,7 +141,7 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
     },
   });
 
-  // 3️⃣ Create beds if provided
+  // 4️⃣ Create beds if provided
   for (const bedInput of beds) {
     await this.hostelRepository.createBed({
       data: {
@@ -153,7 +153,7 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
     });
   }
 
-  // 4️⃣ Fetch the room with beds for return
+  // 5️⃣ Fetch the room with beds for return
   const createdRoom = await this.hostelRepository.findUniqueRoom({
     where: { id: room.id },
     include: { beds: true, hostel: true },
@@ -161,7 +161,7 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
 
   if (!createdRoom) throw new CustomError("Room creation failed");
 
-  // 5️⃣ Convert dates to strings for GraphQL
+  // 6️⃣ Convert dates to strings for GraphQL
   const formattedRoom = {
     ...createdRoom,
     status: createdRoom.status as Status,
@@ -178,7 +178,7 @@ createRoom = async (input: RoomInput, hostelId: string, spaceId: string) => {
     },
   };
 
-  return true;
+  return formattedRoom;
 };
 
 createBed = async (input: BedInput, roomId: string, spaceId: string) => {
@@ -206,14 +206,14 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
     throw new CustomError("Room not found or does not belong to this hostel");
   }
 
-    // ✅ Capacity validation
+    // 3️⃣ Capacity validation
   if (room.beds.length >= room.capacity) {
     throw new CustomError(
       `Cannot create new bed — room '${room.label}' has reached its capacity of ${room.capacity}`
     );
   }
 
-  // 2️⃣ Create the bed
+  // 4️⃣ Create the bed
   const bed = await this.hostelRepository.createBed({
     data: {
       label,
@@ -223,7 +223,7 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
     },
   });
 
-  // 3️⃣ Fetch bed with relations
+  // 5️⃣ Fetch bed with relations
   const createdBed = await this.hostelRepository.findUniqueBed({
     where: { id: bed.id },
     include: {
@@ -234,7 +234,7 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
 
   if (!createdBed) throw new CustomError("Bed creation failed");
 
-  // 4️⃣ Format return for GraphQL (mirror createRoom)
+  // 6️⃣ Format return for GraphQL (mirror createRoom)
   const formattedBed = {
     ...createdBed,
     status: createdBed.status as BedStatus,   // ✅ fix mismatch here
@@ -255,7 +255,7 @@ createBed = async (input: BedInput, roomId: string, spaceId: string) => {
     },
   };
 
-  return true;
+  return formattedBed;
 };
 
  updateHostel = async (input: UpdateHostelInput, id: string, spaceId: string) => {
