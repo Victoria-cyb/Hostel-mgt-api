@@ -1,44 +1,38 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
     "rootDir": "./src",
     "outDir": "./dist",
     "baseUrl": "./src",
-
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
+    
     "module": "ESNext",
     "target": "ESNext",
     "types": ["node"],
-
-    // Other Outputs
+    
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-
-    // Stricter Typechecking Options
+    
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
-    "moduleResolution": "Bundler",
-
+    
+    "moduleResolution": "Node",
+    "esModuleInterop": true,           // Add this
+    "allowSyntheticDefaultImports": true, // Add this
+    
     "noImplicitAny": true,
-
-    // Recommended Options
+    
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
+    // "verbatimModuleSyntax": true,   // Remove or comment out this line
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true,
+    "skipLibCheck": true
   },
   "include": ["./src"],
   "tsc-alias": {
     "verbose": false,
     "resolveFullPaths": true,
-
     "fileExtensions": {
       "inputGlob": "{js,jsx,mjs}",
       "outputCheck": ["js", "json", "jsx", "mjs"]
