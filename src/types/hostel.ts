@@ -24,7 +24,6 @@ export interface PublicHostel {
   id: string;
   name: string;
   gender: Gender;
-  location?: TypeOrNull<string>;
   status: Status;
   // roomCount: number;
   // availableBeds: number;
@@ -73,7 +72,7 @@ export interface BedInput {
   label: string;
  status?: TypeOrNull<BedStatus>;
   amount: number;
-  hostelId: string   
+  hostelId?: string | null
 }
 
 export interface HostelInput {

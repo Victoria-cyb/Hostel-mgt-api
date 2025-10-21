@@ -1,4 +1,5 @@
 
+import { string } from "zod";
 import { AllocationRepository } from "../repositories/allocation";
 import { ApplicationRepository } from "../repositories/application";
 import { type AllocationFilter, AllocationSource, AllocationStatus } from "../types/allocation";
@@ -28,12 +29,11 @@ class AllocationService {
                     id: applicationId,
                     applicationNumber,
                     studentId: input.studentId,
+                    hostelId: input.hostelId,
+                    roomId: input.roomId,
                     bedId: input.bedId,
+                    currency: "NGN",
                     status: ApplicationStatus.Approved,
-                    amount: input.amount,
-                    currency: input.currency,
-                    startDate: input.startDate ? new Date(input.startDate) : null,
-                    endDate: input.endDate ? new Date(input.endDate) : null,
                     stayTypeId: input.stayTypeId ?? null,
                     academicSession: input.academicSession ?? null,
                     academicTerm: input.academicTerm ?? null,
@@ -50,8 +50,6 @@ class AllocationService {
                     studentId: input.studentId,
                     bedId: input.bedId,
                     status: AllocationStatus.Reserved,
-                    startDate: input.startDate ? new Date(input.startDate) : null,
-                    endDate: input.endDate ? new Date(input.endDate) : null,
                     stayTypeId: input.stayTypeId ?? null,
                     academicSession: input.academicSession ?? null,
                     academicTerm: input.academicTerm ?? null,

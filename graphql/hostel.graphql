@@ -14,7 +14,6 @@ type PublicHostel {
   id: ID!
   name: String!
   gender: Gender!
-  location: String
   status: status!
  
 }

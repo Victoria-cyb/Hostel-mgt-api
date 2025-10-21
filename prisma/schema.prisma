@@ -66,10 +66,10 @@ enum PaymentStatus {
 
 // ========== BASE ENTITIES ==========
 model Space {
-  id        String      @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   spaceUsers SpaceUser[] // join table to users
@@ -78,7 +78,7 @@ model Space {
   classes    Class[]
 
   createdById String
-  createdBy   User @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id])
 
   @@map("spaces")
 }
@@ -90,14 +90,14 @@ model Hostel {
   status    Status   @default(active)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
 
   // Foreign Keys
   spaceId String
   space   Space  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
 
   // Relations
-  rooms Room[]
+  rooms        Room[]
+  applications Application[]
 
   @@index([spaceId])
   @@index([status])
@@ -106,17 +106,18 @@ model Hostel {
 }
 
 model Room {
-  id       String  @id @default(uuid())
+  id       String @id @default(uuid())
   label    String
   capacity Int
-  status   Status  @default(active)
+  status   Status @default(active)
 
   // Foreign Keys
   hostelId String
   hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 
   // Relations
-  beds Bed[]
+  beds        Bed[]
+  application Application[]
 
   @@index([hostelId])
   @@index([status])
@@ -130,13 +131,13 @@ model Bed {
   amount Int
 
   // Foreign Keys
-  roomId  String
-  room    Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
- 
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
   // Relations
-  applications     Application[]
-  allocations      Allocation[]
-  currentAllocation Allocation?  @relation("CurrentBedAllocation")
+  applications      Application[]
+  allocations       Allocation[]
+  currentAllocation Allocation?   @relation("CurrentBedAllocation")
 
   @@index([roomId])
   @@index([status])
@@ -175,36 +176,35 @@ model Class {
   // Relations
   spaceUsers SpaceUser[]
 
-
   @@index([spaceId])
   @@map("classes")
 }
 
 model SpaceUser {
-  id       String      @id @default(uuid())
-  role     SpaceRole
+  id        String    @id @default(uuid())
+  role      SpaceRole
   firstName String
   lastName  String
-  email     String?     @unique
+  email     String?
   phone     String?
   gender    Gender?
   image     String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Foreign Keys
-  userId    String
-  user      User       @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  spaceId   String
-  space     Space      @relation(fields: [spaceId], references: [id])
+  spaceId String
+  space   Space  @relation(fields: [spaceId], references: [id])
 
-  classId   String?
-  class     Class?     @relation(fields: [classId], references: [id])
+  classId String?
+  class   Class?  @relation(fields: [classId], references: [id])
 
-  parentId  String?
-   parent   SpaceUser?  @relation("ParentStudent", fields: [parentId], references: [id])
-   students SpaceUser[] @relation("ParentStudent")
+  parentId String?
+  parent   SpaceUser?  @relation("ParentStudent", fields: [parentId], references: [id])
+  students SpaceUser[] @relation("ParentStudent")
 
   // Relations
   applications Application[] @relation("SpaceUserApplications")
@@ -220,31 +220,30 @@ model SpaceUser {
 
 // ========== USERS ==========
 model User {
-  id        String      @id @default(uuid())
-  firstName String
-  lastName  String
-  email     String?     @unique
-  phone     String?
-  gender    Gender?
-  image     String?
-  username  String      @unique
-  password  String?
-  role      Role        @default(user)
-  resetOtp  String?
-resetOtpExpiry DateTime?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id             String    @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String?   @unique
+  phone          String?
+  gender         Gender?
+  image          String?
+  username       String    @unique
+  password       String?
+  role           Role      @default(user)
+  resetOtp       String?
+  resetOtpExpiry DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Relations
-  spaceUsers       SpaceUser[]         // join table to spaces
-  allocations      Allocation[]
-  applications     Application[]
-  spaces           Space[]
- 
+  spaceUsers   SpaceUser[] // join table to spaces
+  allocations  Allocation[]
+  applications Application[]
+  spaces       Space[]
 
-  @@map("users")
   @@index([email])
   @@index([username])
+  @@map("users")
 }
 
 // ========== APPLICATION ==========
@@ -263,14 +262,18 @@ model Application {
   updatedAt         DateTime          @updatedAt
 
   // Foreign Keys
-  studentId    String
-  student      User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  bedId        String
-  bed          Bed       @relation(fields: [bedId], references: [id], onDelete: Cascade)
-  stayTypeId   String?
-  stayType     StayType? @relation(fields: [stayTypeId], references: [id], onDelete: SetNull)
-  spaceUserId  String?
-  spaceUser    SpaceUser? @relation("SpaceUserApplications", fields: [spaceUserId], references: [id], onDelete: SetNull)
+  studentId   String
+  student     User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  hostelId    String?
+  hostel      Hostel?     @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+  roomId      String?
+  room        Room?       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  bedId       String
+  bed         Bed        @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  stayTypeId  String?
+  stayType    StayType?  @relation(fields: [stayTypeId], references: [id], onDelete: SetNull)
+  spaceUserId String?
+  spaceUser   SpaceUser? @relation("SpaceUserApplications", fields: [spaceUserId], references: [id], onDelete: SetNull)
 
   // Relations
   payments    Payment[]

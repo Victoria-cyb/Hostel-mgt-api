@@ -103,10 +103,9 @@ export type ApplyInput = {
   academicSession?: InputMaybe<Scalars['String']['input']>;
   academicTerm?: InputMaybe<Scalars['String']['input']>;
   bedId: Scalars['ID']['input'];
-  currency: Scalars['String']['input'];
-  endDate?: InputMaybe<Scalars['String']['input']>;
-  startDate?: InputMaybe<Scalars['String']['input']>;
-  stayTypeId?: InputMaybe<Scalars['ID']['input']>;
+  hostelId: Scalars['ID']['input'];
+  roomId: Scalars['ID']['input'];
+  stayTypeId: Scalars['ID']['input'];
   studentId: Scalars['ID']['input'];
 };
 
@@ -205,6 +204,7 @@ export type Mutation = {
   createSpace: Space;
   createSpaceUsers: Array<SpaceUser>;
   createStayType: StayType;
+  deleteApplication?: Maybe<Scalars['Boolean']['output']>;
   forgotPassword: Scalars['String']['output'];
   linkParentToStudent: Scalars['Boolean']['output'];
   login: AuthPayload;
@@ -295,6 +295,12 @@ export type MutationCreateStayTypeArgs = {
   name: Scalars['String']['input'];
   spaceId: Scalars['ID']['input'];
   startDate: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteApplicationArgs = {
+  applicationId: Scalars['String']['input'];
+  spaceId: Scalars['ID']['input'];
 };
 
 
@@ -415,7 +421,6 @@ export enum PaymentStatus {
 export type PublicHostel = {
   gender: Gender;
   id: Scalars['ID']['output'];
-  location?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   status: Status;
 };
@@ -930,6 +935,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createSpace?: Resolver<ResolversTypes['Space'], ParentType, ContextType, RequireFields<MutationCreateSpaceArgs, 'input'>>;
   createSpaceUsers?: Resolver<Array<ResolversTypes['SpaceUser']>, ParentType, ContextType, RequireFields<MutationCreateSpaceUsersArgs, 'inputs' | 'spaceId'>>;
   createStayType?: Resolver<ResolversTypes['StayType'], ParentType, ContextType, RequireFields<MutationCreateStayTypeArgs, 'endDate' | 'name' | 'spaceId' | 'startDate'>>;
+  deleteApplication?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteApplicationArgs, 'applicationId' | 'spaceId'>>;
   forgotPassword?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationForgotPasswordArgs, 'email'>>;
   linkParentToStudent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationLinkParentToStudentArgs, 'parentId' | 'spaceId' | 'studentId'>>;
   login?: Resolver<ResolversTypes['AuthPayload'], ParentType, ContextType, RequireFields<MutationLoginArgs, 'identifier' | 'password'>>;
@@ -964,7 +970,6 @@ export type PaymentResolvers<ContextType = any, ParentType extends ResolversPare
 export type PublicHostelResolvers<ContextType = any, ParentType extends ResolversParentTypes['PublicHostel'] = ResolversParentTypes['PublicHostel']> = ResolversObject<{
   gender?: Resolver<ResolversTypes['Gender'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  location?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   status?: Resolver<ResolversTypes['status'], ParentType, ContextType>;
 }>;

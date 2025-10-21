@@ -110,6 +110,16 @@ const APPLICATION_RESOLVERS: Resolvers = {
         return false;
       }
     },
+
+    deleteApplication: async (_: unknown, args: { applicationId: string}) => {
+      try {
+        const { applicationId } = args;
+        return await applicationService.deleteApplication(applicationId)
+      } catch (error) {
+        handleGqlError ({error})
+        return false
+      }
+    },
   }
 }
 export default APPLICATION_RESOLVERS;

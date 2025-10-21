@@ -21,6 +21,13 @@ class SpaceService {
 
    createSpace = async (input: CreateSpaceInput, creatorId: string) => {
     const { name } = input;
+
+     const creator = await this.userRespository.findUserById({
+    where: { id: creatorId },
+  });
+
+  if (!creator) throw new CustomError("Creator not found");
+
     const newSpace = await this.spaceRepository.createSpace({
       data: {
         name,
@@ -257,7 +264,11 @@ createSpaceUsers = async (inputs: CreateSpaceUserInput[], spaceId: string) => {
           space: {
             include: {
               hostels: true,
-              spaceUsers: true,
+              spaceUsers: {
+                include: {
+                  user: true,
+                }
+              },
               stayTypes: true,
               createdBy: true,
               classes: true,
