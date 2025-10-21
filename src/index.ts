@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import cors from "cors";
-import apolloServer from "./graphql/setup";
+import apolloServer from "./graphql/setup.js";
 import { expressMiddleware } from "@as-integrations/express5"; 
 import { getToken, decodeToken } from "./utils/token";
 
