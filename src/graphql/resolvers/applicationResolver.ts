@@ -6,15 +6,15 @@ import { PaymentStatus } from "../../types/application";
 const applicationService = new ApplicationService();
 
 const APPLICATION_RESOLVERS: Resolvers = {
-    Query: {
-        applications: async (_, { filter, spaceId }) => {
+  Query: {
+    applications: async (_, { filter, spaceId }) => {
       try {
         return await applicationService.applications(filter || {}, spaceId);
       } catch (error) {
         throw handleGqlError({ error });
       }
     },
-       application: async (_, { id }) => {
+    application: async (_, { id }) => {
       try {
         return await applicationService.application(id);
       } catch (error) {
@@ -22,47 +22,45 @@ const APPLICATION_RESOLVERS: Resolvers = {
       }
     },
 
-     payments: async (_, { applicationNumber, allocationNumber, spaceId }) => {
+    payments: async (_, { applicationNumber, allocationNumber, spaceId }) => {
       try {
         return await applicationService.payments(
           applicationNumber,
           allocationNumber,
-          spaceId
+          spaceId,
         );
       } catch (error) {
         throw handleGqlError({ error });
       }
     },
 
-     payment: async (_, { id }) => {
+    payment: async (_, { id }) => {
       try {
         return await applicationService.payment(id);
       } catch (error) {
         throw handleGqlError({ error });
       }
     },
-  
-
-    },
-    Mutation: {
-        studentBook: async (_, { input, spaceId }) => {
+  },
+  Mutation: {
+    studentBook: async (_, { input, spaceId }) => {
       try {
-         return await applicationService.studentBook(input, spaceId);
+        return await applicationService.studentBook(input, spaceId);
       } catch (error) {
-        return handleGqlError({error});
+        return handleGqlError({ error });
       }
     },
 
-      parentBulkBook: async (_, { inputs }, { spaceId }) => {
-        try {
+    parentBulkBook: async (_, { inputs }, { spaceId }) => {
+      try {
         return await applicationService.parentBulkBook(inputs, spaceId!);
       } catch (error) {
         handleGqlError({ error });
         return [];
       }
-      },
+    },
 
-      approveApplication: async (
+    approveApplication: async (
       _: unknown,
       args: { applicationId: string; spaceId: string },
     ) => {
@@ -77,12 +75,12 @@ const APPLICATION_RESOLVERS: Resolvers = {
       }
     },
 
-     payHostelFee: async (_: unknown, args: { applicationNumber: string }) => {
+    payHostelFee: async (_: unknown, args: { applicationNumber: string }) => {
       try {
         const { applicationNumber } = args;
         return await applicationService.payHostelFee(applicationNumber);
       } catch (error) {
-       return handleGqlError({ error });
+        return handleGqlError({ error });
       }
     },
 
@@ -111,15 +109,15 @@ const APPLICATION_RESOLVERS: Resolvers = {
       }
     },
 
-    deleteApplication: async (_: unknown, args: { applicationId: string}) => {
+    deleteApplication: async (_: unknown, args: { applicationId: string }) => {
       try {
         const { applicationId } = args;
-        return await applicationService.deleteApplication(applicationId)
+        return await applicationService.deleteApplication(applicationId);
       } catch (error) {
-        handleGqlError ({error})
-        return false
+        handleGqlError({ error });
+        return false;
       }
     },
-  }
-}
+  },
+};
 export default APPLICATION_RESOLVERS;

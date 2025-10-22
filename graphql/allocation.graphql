@@ -39,14 +39,30 @@ input AllocationFilter {
 
 # ========== ALLOCATION QUERIES ==========
 extend type Query {
-  allocations(filter: AllocationFilter, spaceId: ID!): [Allocation!]! @auth @spaceAuth(requires: [admin])
-  allocation(id: ID!, spaceId: ID!): Allocation @auth @spaceAuth(requires: [admin])
+  allocations(filter: AllocationFilter, spaceId: ID!): [Allocation!]!
+    @auth
+    @spaceAuth(requires: [admin])
+  allocation(id: ID!, spaceId: ID!): Allocation
+    @auth
+    @spaceAuth(requires: [admin])
 }
 
 # ========== ALLOCATION MUTATIONS ==========
 extend type Mutation {
-  adminBulkAllocate(inputs: [ApplyInput!]!, spaceId: ID!): [Allocation!]! @auth @spaceAuth(requires: [admin])
-  checkIn(allocationId: ID!, spaceId: ID!): Boolean! @auth @spaceAuth(requires: [admin, student])
-  checkOut(allocationId: ID!, spaceId: ID!): Boolean! @auth @spaceAuth(requires: [admin, student])
-  markLeave(allocationId: ID!, reason: String!, signOutDate: String!, expectedReturn: String!, spaceId: ID!): Allocation! @auth @spaceAuth(requires: [admin, student])
+  adminBulkAllocate(inputs: [ApplyInput!]!, spaceId: ID!): [Allocation!]!
+    @auth
+    @spaceAuth(requires: [admin])
+  checkIn(allocationId: ID!, spaceId: ID!): Boolean!
+    @auth
+    @spaceAuth(requires: [admin, student])
+  checkOut(allocationId: ID!, spaceId: ID!): Boolean!
+    @auth
+    @spaceAuth(requires: [admin, student])
+  markLeave(
+    allocationId: ID!
+    reason: String!
+    signOutDate: String!
+    expectedReturn: String!
+    spaceId: ID!
+  ): Allocation! @auth @spaceAuth(requires: [admin, student])
 }

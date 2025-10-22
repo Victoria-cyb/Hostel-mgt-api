@@ -1,7 +1,6 @@
 import type { TypeOrNull } from ".";
 import type { Space } from "./space";
 
-
 // ================= Enums =================
 export enum Role {
   User = "user",
@@ -24,7 +23,7 @@ export interface User {
   gender?: TypeOrNull<Gender>;
   image?: TypeOrNull<string>;
   username: string; // required
-  spaces?: Space[];  // [Space!]!
+  spaces?: Space[]; // [Space!]!
 }
 
 export interface CreateUserInput {

@@ -75,6 +75,7 @@ export const authDirective = (directiveName: string) => {
 
             return fieldConfig;
           }
+          return fieldConfig;
         },
       }),
   };

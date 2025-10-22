@@ -1,5 +1,5 @@
 import { MapperKind, getDirective, mapSchema } from "@graphql-tools/utils";
-import { GraphQLSchema } from "graphql/index";
+import { GraphQLSchema, defaultFieldResolver } from "graphql";
 import { formatError, CustomError } from "../../utils/error";
 import SpaceService from "../../services/spaceServices";
 
@@ -32,7 +32,7 @@ export const spaceDirective = (directiveName: string) => {
 
           if (authDirective) {
             const { requires: roles, isExact } = authDirective;
-            const { resolve } = fieldConfig;
+            const { resolve = defaultFieldResolver } = fieldConfig;
 
             fieldConfig.resolve = async function (source, args, context, info) {
               try {
@@ -45,10 +45,12 @@ export const spaceDirective = (directiveName: string) => {
                 if (!spaceId && !alias)
                   throw new CustomError("spaceId or alias is required");
 
-                // Check if space is active
-                const space = await spaceService.getSpaceById(spaceId);
-                // ? await spaceService.getSpaceById(spaceId)
-                // : await spaceService.getSpaceByAlias(alias);
+                // Resolve space
+                let space;
+                if (spaceId) {
+                  space = await spaceService.getSpaceById(spaceId);
+                }
+
                 if (!space) {
                   throw new CustomError("space not found");
                 } else if ("active" in space && space.active === false) {
@@ -74,7 +76,7 @@ export const spaceDirective = (directiveName: string) => {
                   userSpaceRole,
                 };
 
-                return resolve?.(source, args, context, info);
+                return resolve(source, args, context, info);
               } catch (error) {
                 console.error("[Error]: Verification failed", error);
                 throw new CustomError(formatError(error));
@@ -82,6 +84,7 @@ export const spaceDirective = (directiveName: string) => {
             };
             return fieldConfig;
           }
+          return fieldConfig;
         },
       }),
   };

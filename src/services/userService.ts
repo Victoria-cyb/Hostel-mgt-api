@@ -1,110 +1,109 @@
-import { UserRepository } from "../repositories/user"
+import { UserRepository } from "../repositories/user";
 import { type CreateUserInput, type User } from "../types/user";
 import { compare, encrypt } from "../utils/auth";
 import { CustomError } from "../utils/error";
 import { generateToken } from "../utils/token";
-import sendEmail from "../utils/sendEmail"
+import sendEmail from "../utils/sendEmail";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
-
 class UserService {
-    private userRepository: UserRepository;
+  private userRepository: UserRepository;
 
-    constructor() {
-        this.userRepository = new UserRepository();
+  constructor() {
+    this.userRepository = new UserRepository();
+  }
+
+  getUserById = async (userId: string): Promise<User> => {
+    const user = await this.userRepository.findUserById({
+      where: { id: userId },
+      include: {
+        spaces: true,
+      },
+    });
+
+    if (!user) throw new CustomError("User not found");
+
+    const { spaces, ...userData } = user as any;
+    return {
+      ...userData,
+      spaces: spaces ?? [],
+      role: user.role as unknown as User["role"],
+    } as User;
+  };
+
+  signUp = async (input: CreateUserInput) => {
+    const { firstName, lastName, email, password, phone } = input;
+
+    // 1. Check if user already exists by email
+    const existingUser = await this.userRepository.findUserByEmail({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new CustomError("User with this email already exists");
     }
-    
-    getUserById = async (userId: string): Promise<User> => {
-        const user = await this.userRepository.findUserById({
-            where: {id: userId},
-            include: {
-                spaces: true
-            },
-        });
 
-        if (!user) throw new CustomError("User not found");
+    // 2. Encrypt password
+    const hashedPassword = await encrypt(password);
 
-        const { spaces, ...userData } = user as any;
-        return {
-            ...userData,
-            spaces: spaces ?? [],
-            role: user.role as unknown as User["role"],
-        } as User;
+    // 3. Generate username (firstname + 4 random digits)
+    const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4-digit number
+    const username = `${firstName.toLowerCase()}${randomDigits}`;
+
+    // 4. Create new user
+    const newUser = await this.userRepository.createUser({
+      data: {
+        firstName,
+        lastName,
+        email,
+        phone: phone ?? null,
+        password: hashedPassword,
+        username,
+      },
+    });
+
+    // 5. Generate token
+    const token = generateToken(
+      { userId: newUser.id },
+      process.env.LOGIN_SECRET!,
+      "7d",
+    );
+
+    return token;
+  };
+
+  login = async (identifier: string, password: string) => {
+    // Try to find user by email first, then by username if not found
+    let user = await this.userRepository.findUserByEmail({
+      where: { email: identifier.toLowerCase() },
+    });
+
+    if (!user) {
+      user = await this.userRepository.findUserByUsername({
+        where: { username: identifier },
+      });
+    }
+    if (!user) {
+      throw new CustomError("Invalid credentials");
     }
 
-    signUp = async (input: CreateUserInput) => {
-        const { firstName, lastName, email, password, phone } = input;
-      
-        // 1. Check if user already exists by email
-        const existingUser = await this.userRepository.findUserByEmail({
-          where: { email },
-        });
-        if (existingUser) {
-          throw new CustomError("User with this email already exists");
-        }
-      
-        // 2. Encrypt password
-        const hashedPassword = await encrypt(password);
-      
-        // 3. Generate username (firstname + 4 random digits)
-        const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4-digit number
-        const username = `${firstName.toLowerCase()}${randomDigits}`;
-      
-        // 4. Create new user
-        const newUser = await this.userRepository.createUser({
-          data: {
-            firstName,
-            lastName,
-            email,
-            phone: phone ?? null,
-            password: hashedPassword,
-            username,
-          },
-        });
-      
-        // 5. Generate token
-        const token = generateToken(
-          { userId: newUser.id },
-          process.env.LOGIN_SECRET!,
-          "7d"
-        );
-      
-        return token;
-    };    
-      
-    login = async (identifier: string, password: string) => {
-        // Try to find user by email first, then by username if not found
-        let user = await this.userRepository.findUserByEmail({
-            where: { email: identifier.toLowerCase() },
-        });
+    if (typeof user.password !== "string") {
+      throw new CustomError("Invalid credentials");
+    }
+    const isValid = await compare(password, user.password);
+    if (!isValid) {
+      throw new CustomError("Invalid credentials");
+    }
+    const token = generateToken(
+      { userId: user.id },
+      process.env.LOGIN_SECRET!,
+      "7d",
+    );
 
-        if (!user) {
-            user = await this.userRepository.findUserByUsername({
-                where: { username: identifier },
-            });
-        }
-        if (!user) {
-          throw new CustomError("Invalid credentials");
-        }
+    return token;
+  };
 
-        if (typeof user.password !== "string") {
-          throw new CustomError("Invalid credentials");
-        }
-        const isValid = await compare(password, user.password);
-        if (!isValid) {
-          throw new CustomError("Invalid credentials");
-        }
-        const token = generateToken(
-          { userId: user.id },
-          process.env.LOGIN_SECRET!,
-          "7d"
-        );
-      
-        return token;
-      };
-    
-       forgotPassword = async (email: string): Promise<string> => {
+  forgotPassword = async (email: string): Promise<string> => {
     // 1️⃣ Find user
     const user = await this.userRepository.findUserByEmail({
       where: { email },
@@ -145,7 +144,7 @@ class UserService {
     return "OTP has been sent to your email";
   };
 
-   verifyOtp = async (email: string, otp: string): Promise<boolean> => {
+  verifyOtp = async (email: string, otp: string): Promise<boolean> => {
     // 1️⃣ Find user by email
     const user = await this.userRepository.findUserByEmail({
       where: { email },
@@ -176,8 +175,7 @@ class UserService {
     return true;
   };
 
-
-   resetPassword = async (
+  resetPassword = async (
     email: string,
     newPassword: string,
   ): Promise<boolean> => {
@@ -202,7 +200,7 @@ class UserService {
     return true;
   };
 
-   changePassword = async (
+  changePassword = async (
     userId: string,
     oldPassword: string,
     newPassword: string,
@@ -233,7 +231,6 @@ class UserService {
 
     return true;
   };
-      
 }
 
 export default UserService;

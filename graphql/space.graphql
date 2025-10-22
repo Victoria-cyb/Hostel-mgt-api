@@ -3,7 +3,7 @@ scalar DateTime
 enum SpaceRole {
   admin
   student
-  parent 
+  parent
 }
 
 enum status {
@@ -55,7 +55,6 @@ type SpaceUser {
   space: SimpleSpaceInfo!
   createdAt: DateTime!
   updatedAt: DateTime!
-
 }
 
 type Class {
@@ -63,8 +62,6 @@ type Class {
   space: Space
   names: [String!]!
   createdAt: String!
-
-
 }
 
 input CreateSpaceUserInput {
@@ -96,7 +93,14 @@ extend type Query {
 
 extend type Mutation {
   createSpace(input: CreateSpaceInput!): Space!
-  createSpaceUsers(inputs: [CreateSpaceUserInput!]!, spaceId: ID!): [SpaceUser!]! @auth   @spaceAuth(requires: [admin])
-  linkParentToStudent(spaceId: ID!, parentId: ID!, studentId: ID!): Boolean! @auth   @spaceAuth(requires: [admin])
-  createClass(spaceId: ID!, names: [String!]!): Boolean! @auth   @spaceAuth(requires: [admin])
+  createSpaceUsers(
+    inputs: [CreateSpaceUserInput!]!
+    spaceId: ID!
+  ): [SpaceUser!]! @auth @spaceAuth(requires: [admin])
+  linkParentToStudent(spaceId: ID!, parentId: ID!, studentId: ID!): Boolean!
+    @auth
+    @spaceAuth(requires: [admin])
+  createClass(spaceId: ID!, names: [String!]!): Boolean!
+    @auth
+    @spaceAuth(requires: [admin])
 }

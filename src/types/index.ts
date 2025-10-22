@@ -1,7 +1,5 @@
 import type { SpaceRole } from "./space";
 
-
-
 export type TypeOrNull<T> = T | null;
 
 export type NonNullableObject<T extends object> = {

@@ -1,6 +1,5 @@
-import { GraphQLError } from "graphql"; 
+import { GraphQLError } from "graphql";
 import type { GraphQLErrorExtensions } from "graphql";
-
 
 export class CustomError extends Error {
   constructor(message: string) {
@@ -32,9 +31,7 @@ export const handleGqlError = ({
 };
 
 export const formatError = (error: unknown, errMsg?: string) => {
-  if (
-    error instanceof CustomError 
-  ) {
+  if (error instanceof CustomError) {
     console.error(`[Error]: ${error.message}`);
     return error.message;
   }

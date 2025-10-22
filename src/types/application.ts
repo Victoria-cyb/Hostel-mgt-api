@@ -6,20 +6,20 @@ import type { TypeOrNull } from ".";
 
 // ================= Enums =================
 export enum ApplicationStatus {
-Pending = "pending",
-Approved = "approved",
-Rejected = "rejected",
+  Pending = "pending",
+  Approved = "approved",
+  Rejected = "rejected",
 }
 
 export enum AllocationSource {
-Admin = "admin",
-Parent = "parent",
-Student = "student",
+  Admin = "admin",
+  Parent = "parent",
+  Student = "student",
 }
 
 export enum PaymentStatus {
-Pending = "pending",
-Paid = "paid",
+  Pending = "pending",
+  Paid = "paid",
 }
 
 // ================= Entities =================
@@ -40,8 +40,8 @@ export interface Application {
   createdBy: AllocationSource;
   createdAt: string;
   updatedAt?: TypeOrNull<string>;
-spaceUser?: TypeOrNull<SpaceUser>;
-allocations: Allocation[];
+  spaceUser?: TypeOrNull<SpaceUser>;
+  allocations: Allocation[];
 }
 
 export interface Payment {
@@ -51,7 +51,7 @@ export interface Payment {
   reference: string;
   amount: number;
   currency: string;
- status: PaymentStatus;
+  status: PaymentStatus;
   method?: TypeOrNull<string>;
   createdAt: string;
   updatedAt?: TypeOrNull<string>;

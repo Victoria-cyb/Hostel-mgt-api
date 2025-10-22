@@ -5,14 +5,14 @@ enum ApplicationStatus {
 }
 
 enum AllocationSource {
-admin
-parent
-student
+  admin
+  parent
+  student
 }
 
 enum PaymentStatus {
-pending
-paid
+  pending
+  paid
 }
 
 # ========== APPLICATION ==========
@@ -33,8 +33,8 @@ type Application {
   createdBy: AllocationSource!
   createdAt: String!
   updatedAt: String
- spaceUser: SpaceUser
- allocations: [Allocation!]!
+  spaceUser: SpaceUser
+  allocations: [Allocation!]!
 }
 
 # ========== PAYMENTS ==========
@@ -61,8 +61,6 @@ input ApplyInput {
   stayTypeId: ID!
   academicSession: String
   academicTerm: String
-  
-  
 }
 
 input ApplicationFilter {
@@ -78,19 +76,43 @@ input ApplicationFilter {
 
 # ========== APPLICATION QUERIES ==========
 extend type Query {
-  applications(filter: ApplicationFilter, spaceId: ID!): [Application!]! @auth @spaceAuth(requires: [admin])
-  application(id: ID!, spaceId: ID!): Application @auth @spaceAuth(requires: [admin])
-  payments(applicationNumber: String, allocationNumber: String, spaceId: ID!): [Payment!]! @auth @spaceAuth(requires: [admin])
+  applications(filter: ApplicationFilter, spaceId: ID!): [Application!]!
+    @auth
+    @spaceAuth(requires: [admin])
+  application(id: ID!, spaceId: ID!): Application
+    @auth
+    @spaceAuth(requires: [admin])
+  payments(
+    applicationNumber: String
+    allocationNumber: String
+    spaceId: ID!
+  ): [Payment!]! @auth @spaceAuth(requires: [admin])
   payment(id: ID!): Payment @auth @spaceAuth(requires: [admin])
 }
 
 # ========== APPLICATION MUTATIONS ==========
 extend type Mutation {
-  studentBook(input: ApplyInput!, spaceId: ID!): Application! @auth @spaceAuth(requires: [student])
-  parentBulkBook(inputs: [ApplyInput!]!, spaceId: ID!): [Application!]! @auth @spaceAuth(requires: [parent])
-  approveApplication(applicationId: ID!, spaceId: ID!): Allocation! @auth @spaceAuth(requires: [admin])
-  payHostelFee(applicationNumber: String!, spaceId: ID!): Payment! @auth @spaceAuth(requires: [student, parent])
-  recordPayment(applicationNumber: String!, status: PaymentStatus!, spaceId: ID!): Payment! @auth @spaceAuth(requires: [admin])
-  verifyPayment(reference: String!, spaceId: ID!): Boolean! @auth @spaceAuth(requires: [admin])
-  deleteApplication(applicationId: String!, spaceId: ID!): Boolean @auth @spaceAuth(requires: [student, parent])
+  studentBook(input: ApplyInput!, spaceId: ID!): Application!
+    @auth
+    @spaceAuth(requires: [student])
+  parentBulkBook(inputs: [ApplyInput!]!, spaceId: ID!): [Application!]!
+    @auth
+    @spaceAuth(requires: [parent])
+  approveApplication(applicationId: ID!, spaceId: ID!): Allocation!
+    @auth
+    @spaceAuth(requires: [admin])
+  payHostelFee(applicationNumber: String!, spaceId: ID!): Payment!
+    @auth
+    @spaceAuth(requires: [student, parent])
+  recordPayment(
+    applicationNumber: String!
+    status: PaymentStatus!
+    spaceId: ID!
+  ): Payment! @auth @spaceAuth(requires: [admin])
+  verifyPayment(reference: String!, spaceId: ID!): Boolean!
+    @auth
+    @spaceAuth(requires: [admin])
+  deleteApplication(applicationId: String!, spaceId: ID!): Boolean
+    @auth
+    @spaceAuth(requires: [student, parent])
 }

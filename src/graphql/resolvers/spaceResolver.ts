@@ -1,14 +1,12 @@
 import SpaceService from "../../services/spaceServices";
 import { handleGqlError } from "../../utils/error";
-import type { CreateSpaceUserInput, Resolvers } from "../types/graphql";
+import type { Resolvers } from "../types/graphql";
 
-
-const spaceService = new SpaceService()
+const spaceService = new SpaceService();
 
 const SPACE_RESOLVER: Resolvers = {
-
-    Query: {
-         space: async (_, { id }, { userId }) => {
+  Query: {
+    space: async (_, { id }, { userId }) => {
       try {
         const space = await spaceService.getSpaceById(id);
         const role = await spaceService.getSpaceUserRole(userId, id);
@@ -18,9 +16,9 @@ const SPACE_RESOLVER: Resolvers = {
       } catch (error) {
         return handleGqlError({ error });
       }
-     },
+    },
 
-      spaces: async (_, { userId }) => {
+    spaces: async (_, { userId }) => {
       try {
         return await spaceService.getSpacesForUser(userId!);
       } catch (error) {
@@ -59,38 +57,40 @@ const SPACE_RESOLVER: Resolvers = {
         return handleGqlError({ error });
       }
     },
-    },
-
-    Mutation: {
-        createSpace: async (_, {input}, {userId}) => {
-            try {
-                const data = await spaceService.createSpace(input, userId)
-                // Ensure createdAt and updatedAt are strings (ISO format)
-                return {
-                    ...data,
-                    // createdAt: data.createdAt instanceof Date ? data.createdAt.toISOString() : data.createdAt,
-                    // updatedAt: data.updatedAt instanceof Date ? data.updatedAt.toISOString() : data.updatedAt,
-                      createdAt: typeof data.createdAt === "string"
-                      ? new Date(data.createdAt).toISOString()
-                     : (data.createdAt as Date).toISOString(),
-                     updatedAt: typeof data.updatedAt === "string"
-                      ? new Date(data.updatedAt).toISOString()
-                     : (data.updatedAt as Date).toISOString(),
-                }
-            } catch (error) {
-                return handleGqlError({error})
-            }
-        },
-
-       createSpaceUsers: async (_, {inputs, spaceId}) => {
-    try {
-      return await spaceService.createSpaceUsers(inputs, spaceId);
-    } catch (error) {
-      return handleGqlError({ error });
-    }
   },
 
-        linkParentToStudent: async (_, { spaceId, parentId, studentId }) => {
+  Mutation: {
+    createSpace: async (_, { input }, { userId }) => {
+      try {
+        const data = await spaceService.createSpace(input, userId);
+        // Ensure createdAt and updatedAt are strings (ISO format)
+        return {
+          ...data,
+          // createdAt: data.createdAt instanceof Date ? data.createdAt.toISOString() : data.createdAt,
+          // updatedAt: data.updatedAt instanceof Date ? data.updatedAt.toISOString() : data.updatedAt,
+          createdAt:
+            typeof data.createdAt === "string"
+              ? new Date(data.createdAt).toISOString()
+              : (data.createdAt as Date).toISOString(),
+          updatedAt:
+            typeof data.updatedAt === "string"
+              ? new Date(data.updatedAt).toISOString()
+              : (data.updatedAt as Date).toISOString(),
+        };
+      } catch (error) {
+        return handleGqlError({ error });
+      }
+    },
+
+    createSpaceUsers: async (_, { inputs, spaceId }) => {
+      try {
+        return await spaceService.createSpaceUsers(inputs, spaceId);
+      } catch (error) {
+        return handleGqlError({ error });
+      }
+    },
+
+    linkParentToStudent: async (_, { spaceId, parentId, studentId }) => {
       try {
         return await spaceService.linkParentToStudent(
           spaceId,
@@ -104,15 +104,12 @@ const SPACE_RESOLVER: Resolvers = {
 
     createClass: async (_, { spaceId, names }) => {
       try {
-        return await spaceService.createClass(spaceId, names)
+        return await spaceService.createClass(spaceId, names);
       } catch (error) {
-        return handleGqlError({error})
+        return handleGqlError({ error });
       }
     },
-
-
-       
-    }
-}
+  },
+};
 
 export default SPACE_RESOLVER;

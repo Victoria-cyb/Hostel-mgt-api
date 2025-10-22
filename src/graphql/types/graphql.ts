@@ -197,10 +197,10 @@ export type Mutation = {
   changePassword: Scalars['Boolean']['output'];
   checkIn: Scalars['Boolean']['output'];
   checkOut: Scalars['Boolean']['output'];
-  createBed: Scalars['Boolean']['output'];
+  createBed: Bed;
   createClass: Scalars['Boolean']['output'];
   createHostel: Scalars['Boolean']['output'];
-  createRoom: Scalars['Boolean']['output'];
+  createRoom: Room;
   createSpace: Space;
   createSpaceUsers: Array<SpaceUser>;
   createStayType: StayType;
@@ -928,10 +928,10 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   changePassword?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationChangePasswordArgs, 'newPassword' | 'oldPassword'>>;
   checkIn?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCheckInArgs, 'allocationId' | 'spaceId'>>;
   checkOut?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCheckOutArgs, 'allocationId' | 'spaceId'>>;
-  createBed?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCreateBedArgs, 'input' | 'roomId' | 'spaceId'>>;
+  createBed?: Resolver<ResolversTypes['Bed'], ParentType, ContextType, RequireFields<MutationCreateBedArgs, 'input' | 'roomId' | 'spaceId'>>;
   createClass?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCreateClassArgs, 'names' | 'spaceId'>>;
   createHostel?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCreateHostelArgs, 'input' | 'spaceId'>>;
-  createRoom?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationCreateRoomArgs, 'hostelId' | 'input' | 'spaceId'>>;
+  createRoom?: Resolver<ResolversTypes['Room'], ParentType, ContextType, RequireFields<MutationCreateRoomArgs, 'hostelId' | 'input' | 'spaceId'>>;
   createSpace?: Resolver<ResolversTypes['Space'], ParentType, ContextType, RequireFields<MutationCreateSpaceArgs, 'input'>>;
   createSpaceUsers?: Resolver<Array<ResolversTypes['SpaceUser']>, ParentType, ContextType, RequireFields<MutationCreateSpaceUsersArgs, 'inputs' | 'spaceId'>>;
   createStayType?: Resolver<ResolversTypes['StayType'], ParentType, ContextType, RequireFields<MutationCreateStayTypeArgs, 'endDate' | 'name' | 'spaceId' | 'startDate'>>;

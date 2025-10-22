@@ -20,10 +20,10 @@ export class SpaceRepository {
   findSpaceUsers: Prisma.SpaceUserDelegate["findMany"] = (args) =>
     this.db.spaceUser.findMany(args);
 
-   findSpaceUser: Prisma.SpaceUserDelegate["findFirst"] = (args) =>
+  findSpaceUser: Prisma.SpaceUserDelegate["findFirst"] = (args) =>
     this.db.spaceUser.findFirst(args);
 
-   updateSpaceUser: Prisma.SpaceUserDelegate["update"] = (args) =>
+  updateSpaceUser: Prisma.SpaceUserDelegate["update"] = (args) =>
     this.db.spaceUser.update(args);
 
   // ========== CLASSES ==========

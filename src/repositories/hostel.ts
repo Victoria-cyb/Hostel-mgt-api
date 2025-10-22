@@ -35,8 +35,7 @@ export class HostelRepository {
   findUniqueRoom: Prisma.RoomDelegate["findUnique"] = (args) =>
     this.db.room.findUnique(args);
 
-  countRooms: Prisma.RoomDelegate["count"] = (args) =>
-    this.db.room.count(args);
+  countRooms: Prisma.RoomDelegate["count"] = (args) => this.db.room.count(args);
 
   createRoom: Prisma.RoomDelegate["create"] = (args) =>
     this.db.room.create(args);
@@ -57,19 +56,15 @@ export class HostelRepository {
   findUniqueBed: Prisma.BedDelegate["findUnique"] = (args) =>
     this.db.bed.findUnique(args);
 
-  countBeds: Prisma.BedDelegate["count"] = (args) =>
-    this.db.bed.count(args);
+  countBeds: Prisma.BedDelegate["count"] = (args) => this.db.bed.count(args);
 
-  createBed: Prisma.BedDelegate["create"] = (args) =>
-    this.db.bed.create(args);
+  createBed: Prisma.BedDelegate["create"] = (args) => this.db.bed.create(args);
 
-  updateBed: Prisma.BedDelegate["update"] = (args) =>
-    this.db.bed.update(args);
+  updateBed: Prisma.BedDelegate["update"] = (args) => this.db.bed.update(args);
 
-  deleteBed: Prisma.BedDelegate["delete"] = (args) =>
-    this.db.bed.delete(args);
+  deleteBed: Prisma.BedDelegate["delete"] = (args) => this.db.bed.delete(args);
 
-   createStayType: Prisma.StayTypeDelegate["create"] = (args) =>
+  createStayType: Prisma.StayTypeDelegate["create"] = (args) =>
     this.db.stayType.create(args);
 
   findUniqueStayType: Prisma.StayTypeDelegate["findUnique"] = (args) =>
