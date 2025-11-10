@@ -31,10 +31,10 @@ export type Allocation = {
   endDate?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   payments?: Maybe<Array<Payment>>;
+  spaceUser?: Maybe<SpaceUser>;
   startDate?: Maybe<Scalars['String']['output']>;
   status: AllocationStatus;
   stayType?: Maybe<StayType>;
-  student?: Maybe<User>;
 };
 
 export type AllocationFilter = {
@@ -64,7 +64,7 @@ export enum AllocationStatus {
 export type Application = {
   academicSession?: Maybe<Scalars['String']['output']>;
   academicTerm?: Maybe<Scalars['String']['output']>;
-  allocations: Array<Allocation>;
+  allocations?: Maybe<Array<Allocation>>;
   amount?: Maybe<Scalars['Float']['output']>;
   applicationNumber: Scalars['String']['output'];
   bed?: Maybe<Bed>;
@@ -78,7 +78,6 @@ export type Application = {
   startDate?: Maybe<Scalars['String']['output']>;
   status: ApplicationStatus;
   stayType?: Maybe<StayType>;
-  student?: Maybe<User>;
   updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
@@ -857,16 +856,16 @@ export type AllocationResolvers<ContextType = any, ParentType extends ResolversP
   endDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payments?: Resolver<Maybe<Array<ResolversTypes['Payment']>>, ParentType, ContextType>;
+  spaceUser?: Resolver<Maybe<ResolversTypes['SpaceUser']>, ParentType, ContextType>;
   startDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['AllocationStatus'], ParentType, ContextType>;
   stayType?: Resolver<Maybe<ResolversTypes['StayType']>, ParentType, ContextType>;
-  student?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
 }>;
 
 export type ApplicationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Application'] = ResolversParentTypes['Application']> = ResolversObject<{
   academicSession?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   academicTerm?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  allocations?: Resolver<Array<ResolversTypes['Allocation']>, ParentType, ContextType>;
+  allocations?: Resolver<Maybe<Array<ResolversTypes['Allocation']>>, ParentType, ContextType>;
   amount?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   applicationNumber?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   bed?: Resolver<Maybe<ResolversTypes['Bed']>, ParentType, ContextType>;
@@ -880,7 +879,6 @@ export type ApplicationResolvers<ContextType = any, ParentType extends Resolvers
   startDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   status?: Resolver<ResolversTypes['ApplicationStatus'], ParentType, ContextType>;
   stayType?: Resolver<Maybe<ResolversTypes['StayType']>, ParentType, ContextType>;
-  student?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 }>;
 

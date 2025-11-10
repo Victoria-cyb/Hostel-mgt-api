@@ -1,6 +1,6 @@
 import type { TypeOrNull } from ".";
 import type { Allocation } from "./allocation";
-import type { Class, Space } from "./space";
+import type { Space } from "./space";
 
 // ================= Enums =================
 export enum BedStatus {

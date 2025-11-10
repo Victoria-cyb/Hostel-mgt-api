@@ -1,4 +1,3 @@
-import type { User } from "./user";
 import type { Bed, StayType } from "./hostel";
 import type { Allocation } from "./allocation";
 import type { SpaceUser } from "./space";
@@ -26,7 +25,6 @@ export enum PaymentStatus {
 export interface Application {
   id: string;
   applicationNumber: string;
-  student: User;
   bed?: Bed;
   status: ApplicationStatus;
   amount: number;

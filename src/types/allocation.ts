@@ -1,7 +1,6 @@
 import type { TypeOrNull } from ".";
 import type { Application, Payment } from "./application";
 import type { Bed, StayType } from "./hostel";
-import type { User } from "./user";
 
 // ================= Enums =================
 export enum AllocationStatus {
@@ -21,7 +20,6 @@ export enum AllocationSource {
 export interface Allocation {
   id: string;
   allocationNumber: string;
-  student: User;
   bed: Bed;
   status: AllocationStatus;
   startDate?: TypeOrNull<string>;

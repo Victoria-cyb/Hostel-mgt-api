@@ -19,7 +19,6 @@ enum PaymentStatus {
 type Application {
   id: ID!
   applicationNumber: String!
-  student: User
   bed: Bed
   status: ApplicationStatus!
   amount: Float
@@ -34,7 +33,7 @@ type Application {
   createdAt: String!
   updatedAt: String
   spaceUser: SpaceUser
-  allocations: [Allocation!]!
+  allocations: [Allocation!]
 }
 
 # ========== PAYMENTS ==========

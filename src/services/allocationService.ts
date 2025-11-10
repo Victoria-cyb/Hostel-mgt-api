@@ -1,4 +1,4 @@
-import { string } from "zod";
+import { HostelRepository } from "../repositories/hostel";
 import { AllocationRepository } from "../repositories/allocation";
 import { ApplicationRepository } from "../repositories/application";
 import {
@@ -9,21 +9,57 @@ import {
 import { ApplicationStatus, type ApplyInput } from "../types/application";
 import { CustomError } from "../utils/error";
 import { randomUUID } from "crypto";
+import { SpaceRepository } from "../repositories/space";
 
 class AllocationService {
-  private allocationaRepository = new AllocationRepository();
-  private applicationRepository = new ApplicationRepository();
+  private allocationRepository: AllocationRepository;
+  private applicationRepository: ApplicationRepository;
+  private hostelRepository: HostelRepository;
+  private spaceRepository: SpaceRepository
 
   constructor() {
-    this.allocationaRepository = new AllocationRepository();
+    this.allocationRepository = new AllocationRepository();
     this.applicationRepository = new ApplicationRepository();
+    this.hostelRepository = new HostelRepository();
+    this.spaceRepository = new SpaceRepository();
   }
 
   adminBulkAllocate = async (inputs: ApplyInput[], spaceId: string) => {
     const allocations = [];
-
+  
     for (const input of inputs) {
-      // 1. Create application first
+      // Validate that student belongs to the space
+      const student = await this.spaceRepository.findSpaceUser({
+        where: { 
+          userId: input.studentId, 
+          spaceId 
+        },
+        include: { space: true }
+      });
+  
+      if (!student) {
+        throw new CustomError(`Student ${input.studentId} not found in this space`);
+      }
+  
+      // Validate hostel belongs to space
+      const hostel = await this.hostelRepository.findUniqueHostel({
+        where: { id: input.hostelId },
+      });
+  
+      if (!hostel || hostel.spaceId !== spaceId) {
+        throw new CustomError(`Hostel ${input.hostelId} not found in this space`);
+      }
+
+      // Validate bed
+      const bed = await this.hostelRepository.findUniqueBed({
+        where: { id: input.bedId },
+        include: { room: true }
+      });
+
+      if (!bed || bed.room?.hostelId !== input.hostelId) {
+        throw new CustomError(`Bed ${input.bedId} not found in this hostel`);
+      }
+
       const applicationId = randomUUID();
       const applicationNumber = `APP-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
@@ -31,26 +67,26 @@ class AllocationService {
         data: {
           id: applicationId,
           applicationNumber,
-          studentId: input.studentId,
+          spaceUserId: student.id,
           hostelId: input.hostelId,
           roomId: input.roomId,
           bedId: input.bedId,
+          amount: bed.amount,
           currency: "NGN",
           status: ApplicationStatus.Approved,
           stayTypeId: input.stayTypeId ?? null,
           academicSession: input.academicSession ?? null,
           academicTerm: input.academicTerm ?? null,
           createdBy: AllocationSource.Admin,
-          // Remove spaceId - it doesn't exist in Application model
         },
       });
 
       // 2. Create allocation using applicationId
-      const allocation = await this.allocationaRepository.createAllocation({
+      const allocation = await this.allocationRepository.createAllocation({
         data: {
           id: randomUUID(),
           allocationNumber: `ALLOC-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          studentId: input.studentId,
+          spaceUserId: student.id,
           bedId: input.bedId,
           status: AllocationStatus.Reserved,
           stayTypeId: input.stayTypeId ?? null,
@@ -65,7 +101,6 @@ class AllocationService {
       allocations.push({
         id: allocation.id,
         allocationNumber: allocation.allocationNumber,
-        studentId: allocation.studentId,
         bedId: allocation.bedId,
         applicationId: allocation.applicationId,
         status: allocation.status as AllocationStatus,
@@ -86,7 +121,7 @@ class AllocationService {
 
   checkIn = async (id: string) => {
     // 1. Find the allocation
-    const allocation = await this.allocationaRepository.findUniqueAllocation({
+    const allocation = await this.allocationRepository.findUniqueAllocation({
       where: { id },
     });
 
@@ -99,7 +134,7 @@ class AllocationService {
     }
 
     // 2. Update allocation status and checkInDate
-    await this.allocationaRepository.updateAllocation({
+    await this.allocationRepository.updateAllocation({
       where: { id },
       data: {
         status: AllocationStatus.Active,
@@ -112,7 +147,7 @@ class AllocationService {
 
   checkOut = async (id: string): Promise<boolean> => {
     // 1. Find the allocation
-    const allocation = await this.allocationaRepository.findUniqueAllocation({
+    const allocation = await this.allocationRepository.findUniqueAllocation({
       where: { id },
     });
 
@@ -125,7 +160,7 @@ class AllocationService {
     }
 
     // 2. Update allocation status and checkOutDate
-    await this.allocationaRepository.updateAllocation({
+    await this.allocationRepository.updateAllocation({
       where: { id },
       data: {
         status: AllocationStatus.CheckedOut,
@@ -143,14 +178,23 @@ class AllocationService {
     expectedReturn: string,
     spaceId: string,
   ) => {
-    const allocation = await this.allocationaRepository.findUniqueAllocation({
+    const allocation = await this.allocationRepository.findUniqueAllocation({
       where: { id: allocationId },
+      include: {
+        spaceUser: true,
+        bed: { include: { room: { include: { hostel: true } } } }
+      }
     });
-
+  
     if (!allocation) {
       throw new CustomError("Allocation not found");
     }
-
+  
+    // Validate allocation belongs to the space
+    if (allocation.bed?.room?.hostel?.spaceId !== spaceId) {
+      throw new CustomError("Allocation not found in this space");
+    }
+  
     if (allocation.status === AllocationStatus.CheckedOut) {
       throw new CustomError("Allocation already checked out");
     }
@@ -158,7 +202,7 @@ class AllocationService {
     const checkOut = new Date(signOutDate);
     const expectedReturnDate = new Date(expectedReturn);
 
-    const updatedAllocation = await this.allocationaRepository.updateAllocation(
+    const updatedAllocation = await this.allocationRepository.updateAllocation(
       {
         where: { id: allocationId },
         data: {
@@ -176,7 +220,6 @@ class AllocationService {
     return {
       id: updatedAllocation.id,
       allocationNumber: updatedAllocation.allocationNumber,
-      studentId: updatedAllocation.studentId,
       bedId: updatedAllocation.bedId,
       applicationId: updatedAllocation.applicationId,
       status: updatedAllocation.status as AllocationStatus, // map enum
@@ -198,7 +241,7 @@ class AllocationService {
     const where: Record<string, unknown> = {};
 
     if (filter.studentId) {
-      where.studentId = filter.studentId;
+      where.spaceUserId = filter.studentId;
     }
     if (filter.startDate && !isNaN(Date.parse(filter.startDate))) {
       where.startDate = { gte: new Date(filter.startDate) };
@@ -223,14 +266,13 @@ class AllocationService {
       where.allocationNumber = filter.allocationNumber;
     }
 
-    const allocations = await this.allocationaRepository.findAllocations({
+    const allocations = await this.allocationRepository.findAllocations({
       where,
     });
 
     return allocations.map((alloc) => ({
       id: alloc.id,
       allocationNumber: alloc.allocationNumber,
-      studentId: alloc.studentId,
       bedId: alloc.bedId,
       applicationId: alloc.applicationId,
       status: alloc.status as unknown as AllocationStatus,
@@ -247,7 +289,7 @@ class AllocationService {
   };
 
   allocation = async (id: string) => {
-    const allocation = await this.allocationaRepository.findUniqueAllocation({
+    const allocation = await this.allocationRepository.findUniqueAllocation({
       where: { id },
     });
 
@@ -256,7 +298,6 @@ class AllocationService {
     return {
       id: allocation.id,
       allocationNumber: allocation.allocationNumber,
-      studentId: allocation.studentId,
       bedId: allocation.bedId,
       applicationId: allocation.applicationId,
       status: allocation.status as unknown as AllocationStatus,

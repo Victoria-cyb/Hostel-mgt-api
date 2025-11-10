@@ -9,7 +9,7 @@ enum AllocationStatus {
 type Allocation {
   id: ID!
   allocationNumber: String!
-  student: User
+  spaceUser: SpaceUser
   bed: Bed
   status: AllocationStatus!
   startDate: String

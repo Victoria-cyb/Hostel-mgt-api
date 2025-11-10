@@ -1,6 +1,6 @@
 import ApplicationService from "../../services/applicationService";
 import { handleGqlError } from "../../utils/error";
-import type { Resolvers } from "../types/graphql";
+import type { Resolvers, Allocation } from "../types/graphql";
 import { PaymentStatus } from "../../types/application";
 
 const applicationService = new ApplicationService();
@@ -63,24 +63,28 @@ const APPLICATION_RESOLVERS: Resolvers = {
     approveApplication: async (
       _: unknown,
       args: { applicationId: string; spaceId: string },
-    ) => {
+    ) => { // Explicitly type as GraphQL Allocation
       try {
         const { applicationId, spaceId } = args;
-        return await applicationService.approveApplication(
+        const allocation = await applicationService.approveApplication(
           applicationId,
           spaceId,
-        );
+        ) ?? {};
+        return allocation as Allocation
       } catch (error) {
-        handleGqlError({ error });
+        throw handleGqlError({ error });
       }
     },
 
-    payHostelFee: async (_: unknown, args: { applicationNumber: string }) => {
+    payHostelFee: async (
+      _: unknown,
+      args: { applicationNumber: string; spaceId: string }, // Added spaceId
+    ) => { // Explicitly type as GraphQL Payment
       try {
-        const { applicationNumber } = args;
-        return await applicationService.payHostelFee(applicationNumber);
+        const { applicationNumber, spaceId } = args; // Destructure spaceId
+        return await applicationService.payHostelFee(applicationNumber, spaceId); // Pass spaceId
       } catch (error) {
-        return handleGqlError({ error });
+        throw handleGqlError({ error }); // Changed to throw for consistency
       }
     },
 

@@ -26,7 +26,7 @@ const sendEmail = async (
 
     const response = await mg.messages.create(domain, data);
     return response;
-  } catch (err: any) {
+  } catch (err) {
     console.error("❌ Error sending email:", err);
     throw new Error("Failed to send email");
   }

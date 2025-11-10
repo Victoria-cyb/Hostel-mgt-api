@@ -279,7 +279,7 @@ class SpaceService {
     if (!space) throw new CustomError("Space not found");
 
     // helper to normalize date -> ISO string
-    const toISO = (d: any) =>
+    const toISO = (d: Date) =>
       d instanceof Date ? d.toISOString() : (d as string | undefined);
 
     // Build the mappedSpace (FULL shape expected by GraphQL)
@@ -363,7 +363,7 @@ class SpaceService {
     mappedSpace.classes = (space.classes ?? []).map((c: any) => {
       const mappedClass = {
         id: c.id,
-        name: c.name,
+        name: c.names,
         createdAt: toISO(c.createdAt),
         // The GraphQL Class.space expects a full Space — point to mappedSpace
         space: mappedSpace,
@@ -371,13 +371,13 @@ class SpaceService {
       return mappedClass;
     });
 
-    // If any of the mapped nested objects (like class.space) had their own classes/users included
-    // and you want them to reflect mappedSpace.classes/users, you may need to update them, but
-    // pointing to mappedSpace above will satisfy the GraphQL type system.
+   
 
     return mappedSpace;
   };
 
+
+  
   getSpaceUserRole = async (userId: string, spaceId: string) => {
     const spaceUser = await this.spaceRepository.findSpaceUsers({
       where: { userId, spaceId },

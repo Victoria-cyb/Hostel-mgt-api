@@ -237,8 +237,6 @@ model User {
 
   // Relations
   spaceUsers   SpaceUser[] // join table to spaces
-  allocations  Allocation[]
-  applications Application[]
   spaces       Space[]
 
   @@index([email])
@@ -262,8 +260,6 @@ model Application {
   updatedAt         DateTime          @updatedAt
 
   // Foreign Keys
-  studentId   String
-  student     User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   hostelId    String?
   hostel      Hostel?     @relation(fields: [hostelId], references: [id], onDelete: Cascade)
   roomId      String?
@@ -279,7 +275,6 @@ model Application {
   payments    Payment[]
   allocations Allocation[]
 
-  @@index([studentId])
   @@index([bedId])
   @@index([status])
   @@index([applicationNumber])
@@ -307,8 +302,6 @@ model Allocation {
   updatedAt        DateTime         @updatedAt
 
   // Foreign Keys
-  studentId     String
-  student       User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
   bedId         String
   bed           Bed         @relation(fields: [bedId], references: [id], onDelete: Cascade)
   currentBedId  String?     @unique
@@ -323,7 +316,6 @@ model Allocation {
   // Relations
   payments Payment[]
 
-  @@index([studentId])
   @@index([bedId])
   @@index([status])
   @@index([allocationNumber])

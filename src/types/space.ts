@@ -1,5 +1,5 @@
 import type { Gender, User } from "./user";
-import type { PublicHostel, Hostel, StayType, Bed } from "./hostel";
+import type { PublicHostel, Hostel, StayType } from "./hostel";
 import type { Application } from "./application";
 import type { Allocation } from "./allocation";
 import type { TypeOrNull } from ".";
