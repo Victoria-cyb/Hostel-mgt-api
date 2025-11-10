@@ -531,7 +531,7 @@ class ApplicationService {
         ...b,
         status: b.status as BedStatus,
         room: b.room ? mapRoom(b.room) : undefined,
-      })),
+      })) ?? [],
     });
 
     const mapPayment = (p: Payment): Payment => ({
