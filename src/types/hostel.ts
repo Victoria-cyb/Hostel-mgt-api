@@ -35,6 +35,7 @@ export interface Hostel {
   status: Status;
   rooms?: Room[];
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Room {
@@ -61,6 +62,9 @@ export interface StayType {
   name: string;
   startDate: string;
   endDate: string;
+  createdAt?: string;
+  updatedAt?: string;
+  
 }
 
 // ================= Inputs =================

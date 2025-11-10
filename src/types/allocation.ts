@@ -29,7 +29,7 @@ export interface Allocation {
   academicTerm?: TypeOrNull<string>;
   checkInDate?: TypeOrNull<string>;
   checkOutDate?: TypeOrNull<string>;
-  application: Application;
+  application?: Application;
   payments: Payment[];
   createdBy: AllocationSource;
   createdAt: string;

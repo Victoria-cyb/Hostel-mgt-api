@@ -17,7 +17,7 @@ import { randomUUID } from "crypto";
 import axios from "axios";
 import { BedStatus } from "../types/hostel";
 import type { Payment as PrismaPayment } from "@prisma/client";
-import type { Status, Room, StayType, Hostel } from "../types/hostel";
+import { Status, Room, StayType, Hostel } from "../types/hostel";
 import type { Space } from "../types/space";
 
 class ApplicationService {
@@ -476,13 +476,22 @@ class ApplicationService {
             spaceUser: true,
             bed: true,
             payments: true,
-            allocations: {
-              include: {
-                bed: true,
-                application: true,
-                payments: true,
-              },
-            },
+           allocations: {
+  include: {
+    bed: {
+      include: {
+        room: {
+          include: {
+            hostel: true,
+            beds: true,
+          },
+        },
+      },
+    },
+    application: true, // ✅ application belongs to Allocation, not Bed
+    payments: true,
+  },
+},
           },
         },
         payments: true,
@@ -534,8 +543,11 @@ class ApplicationService {
         : undefined,
     });
 
-    const mapAllocation = (alloc: Allocation): Allocation => ({
+
+    // eslint-disable-next-line
+    const mapAllocation = (alloc: any): Allocation => ({
       ...alloc,
+      
       status: alloc.status as AllocationStatus,
       createdBy: alloc.createdBy as AllocationSource,
       bed: {
@@ -558,9 +570,7 @@ class ApplicationService {
       createdAt: new Date(alloc.createdAt).toISOString(),
     });
 
-    // ─────────────────────────────
-    // Return mapped allocation
-    // ─────────────────────────────
+  
     const mapped = mapAllocation(allocationResult);
 
     // Rebuild stayType for stronger typing
