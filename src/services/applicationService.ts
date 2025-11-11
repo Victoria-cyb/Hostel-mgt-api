@@ -527,11 +527,11 @@ class ApplicationService {
             status: room.hostel.status as Status,
           }
         : undefined,
-      beds: room.beds.map((b) => ({
-        ...b,
-        status: b.status as BedStatus,
-        room: b.room ? mapRoom(b.room) : undefined,
-      })) ?? [],
+      beds: (room.beds ?? []).map((b) => ({
+  ...b,
+  status: b.status as BedStatus,
+  room: b.room ? mapRoom(b.room) : undefined,
+})),
     });
 
     const mapPayment = (p: Payment): Payment => ({
