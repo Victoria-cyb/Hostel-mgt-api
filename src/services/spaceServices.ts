@@ -4,11 +4,14 @@ import {
   type CreateSpaceInput,
   type CreateSpaceUserInput,
   Status,
+  
+  
 } from "../types/space";
 import type { Gender } from "../types/user";
 import { UserRepository } from "../repositories/user";
 import { encrypt } from "../utils/auth";
 import { CustomError } from "../utils/error";
+
 
 class SpaceService {
   private spaceRepository: SpaceRepository;
@@ -36,9 +39,9 @@ class SpaceService {
       include: {
         createdBy: true,
         spaceUsers: true,
-        hostels: true,
-        stayTypes: true,
-        classes: true,
+       classes: true,
+       hostels: true
+
       
       },
     });
@@ -59,10 +62,33 @@ class SpaceService {
 
     return {
       ...newSpace,
-       users: newSpace.spaceUsers ?? [], // map DB field to GraphQL field
-       hostels: newSpace.hostels ?? [],
-        stayTypes: newSpace.stayTypes ?? [],
-        classes: newSpace.classes ?? [],
+    
+        classes: (newSpace.classes ?? []).map(c => ({
+    id: c.id,
+    space: undefined,
+    names: c.name ? [c.name] : [],
+    createdAt: c.createdAt instanceof Date ? c.createdAt.toISOString() : c.createdAt,
+  })),
+
+
+       hostels: (newSpace.hostels ?? []).map(h => ({
+    ...h,
+    gender: h.gender as Gender,
+    status: h.status as Status,
+    createdAt: h.createdAt instanceof Date ? h.createdAt.toISOString() : h.createdAt,
+    updatedAt: h.updatedAt instanceof Date ? h.updatedAt.toISOString() : h.updatedAt,
+  })),
+  
+
+
+
+      // classes: (newSpace.classes ?? []).map(c => ({
+      //   ...c,
+      //   names: [],
+      //   createdAt: c.createdAt instanceof Date ? c.createdAt.toISOString(): c.createdAt,
+      //   updatedAt: c.updatedAt instanceof Date ? c.updatedAt.toISOString(): c.updatedAt,
+      // })),
+     
       createdAt:
         newSpace.createdAt instanceof Date
           ? newSpace.createdAt.toISOString()
@@ -74,6 +100,117 @@ class SpaceService {
     };
   };
 
+
+
+  // createSpace = async (input: CreateSpaceInput, creatorId: string) => {
+  //   const { name } = input;
+
+  //   // 1️⃣ Fetch creator
+  //   const creator = await this.userRespository.findUserById({
+  //     where: { id: creatorId },
+  //   });
+  //   if (!creator) throw new CustomError("Creator not found");
+
+  //   // 2️⃣ Create space
+  //   const newSpace = await this.spaceRepository.createSpace({
+  //     data: { name, createdById: creatorId },
+  //     include: {
+  //       createdBy: true,
+  //       spaceUsers: { include: { user: true } }, // include related user
+  //       stayTypes: true,
+  //       classes: true,
+  //       hostels: true,
+  //     },
+  //   });
+
+  //   // 3️⃣ Create system admin user
+  //   const adminUser = await this.spaceRepository.createSpaceUser({
+  //     data: {
+  //       userId: creatorId,
+  //       spaceId: newSpace.id,
+  //       role: SpaceRole.Admin,
+  //       firstName: "System",
+  //       lastName: "Admin",
+  //       email: "admin@system.local",
+  //       phone: null,
+  //       gender: null,
+  //       image: null,
+  //     },
+  //   });
+
+  //   // 4️⃣ Return fully mapped Space object
+  //   return {
+  //     ...newSpace,
+  //     users: [
+  //       ...(newSpace.spaceUsers ?? []),
+  //       {
+  //         ...adminUser,
+  //         user: creator,
+  //         space: { id: newSpace.id, name: newSpace.name },
+  //         applications: [],
+  //         allocations: [],
+  //         createdAt:
+  //           adminUser.createdAt instanceof Date
+  //             ? adminUser.createdAt.toISOString()
+  //             : adminUser.createdAt,
+  //         updatedAt:
+  //           adminUser.updatedAt instanceof Date
+  //             ? adminUser.updatedAt.toISOString()
+  //             : adminUser.updatedAt,
+  //       },
+  //     ].map((su) => ({
+  //       id: su.id,
+  //       user: su.user,
+  //       firstName: su.firstName,
+  //       lastName: su.lastName,
+  //         email: su.email ?? undefined,   // <-- use undefined instead of null
+  // phone: su.phone ?? undefined,   // <-- use undefined instead of null
+  // gender: su.gender ?? undefined, // <-- use undefined instead of null
+  // image: su.image ?? undefined,   // <-- use undefined instead of null
+  //       role: su.role,
+  //       space: { id: newSpace.id, name: newSpace.name },
+  //       createdAt:
+  //         su.createdAt instanceof Date ? su.createdAt.toISOString() : su.createdAt,
+  //       updatedAt:
+  //         su.updatedAt instanceof Date ? su.updatedAt.toISOString() : su.updatedAt,
+  //     })),
+  //     stayTypes: (newSpace.stayTypes ?? []).map((st) => ({
+  //       ...st,
+  //       startDate:
+  //         st.startDate instanceof Date ? st.startDate.toISOString() : st.startDate,
+  //       endDate:
+  //         st.endDate instanceof Date ? st.endDate.toISOString() : st.endDate,
+  //          space: {
+  //   id: newSpace.id,
+  //   name: newSpace.name,
+  //   createdById: newSpace.createdById,
+  //   createdAt: newSpace.createdAt instanceof Date ? newSpace.createdAt.toISOString() : newSpace.createdAt,
+  //   updatedAt: newSpace.updatedAt instanceof Date ? newSpace.updatedAt.toISOString() : newSpace.updatedAt,
+  //   createdBy: newSpace.createdBy,
+  //   hostels: [],
+  //   users: [],
+  //   classes: [],
+  //   stayTypes: [],
+  //          },
+  //     })),
+  //     classes: (newSpace.classes ?? []).map((c) => ({
+  //       ...c,
+  //       names: [c.name],
+  //       createdAt: c.createdAt instanceof Date ? c.createdAt.toISOString() : c.createdAt,
+  //     })),
+  //     hostels: (newSpace.hostels ?? []).map((h) => ({
+  //       ...h,
+  //       gender: h.gender as Gender,
+  //       status: h.status as Status,
+  //       createdAt: h.createdAt instanceof Date ? h.createdAt.toISOString() : h.createdAt,
+  //       updatedAt: h.updatedAt instanceof Date ? h.updatedAt.toISOString() : h.updatedAt,
+  //     })),
+  //     createdAt:
+  //       newSpace.createdAt instanceof Date ? newSpace.createdAt.toISOString() : newSpace.createdAt,
+  //     updatedAt:
+  //       newSpace.updatedAt instanceof Date ? newSpace.updatedAt.toISOString() : newSpace.updatedAt,
+  //   };
+  // };
   createSpaceUsers = async (
     inputs: CreateSpaceUserInput[],
     spaceId: string,

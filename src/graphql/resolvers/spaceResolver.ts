@@ -62,21 +62,21 @@ const SPACE_RESOLVER: Resolvers = {
   Mutation: {
     createSpace: async (_, { input }, { userId }) => {
       try {
-        const data = await spaceService.createSpace(input, userId);
+       return await spaceService.createSpace(input, userId);
         // Ensure createdAt and updatedAt are strings (ISO format)
-        return {
-          ...data,
-          // createdAt: data.createdAt instanceof Date ? data.createdAt.toISOString() : data.createdAt,
-          // updatedAt: data.updatedAt instanceof Date ? data.updatedAt.toISOString() : data.updatedAt,
-          createdAt:
-            typeof data.createdAt === "string"
-              ? new Date(data.createdAt).toISOString()
-              : (data.createdAt as Date).toISOString(),
-          updatedAt:
-            typeof data.updatedAt === "string"
-              ? new Date(data.updatedAt).toISOString()
-              : (data.updatedAt as Date).toISOString(),
-        };
+        // return {
+        //   ...data,
+        //   // createdAt: data.createdAt instanceof Date ? data.createdAt.toISOString() : data.createdAt,
+        //   // updatedAt: data.updatedAt instanceof Date ? data.updatedAt.toISOString() : data.updatedAt,
+        //   createdAt:
+        //     typeof data.createdAt === "string"
+        //       ? new Date(data.createdAt).toISOString()
+        //       : (data.createdAt as Date).toISOString(),
+        //   updatedAt:
+        //     typeof data.updatedAt === "string"
+        //       ? new Date(data.updatedAt).toISOString()
+        //       : (data.updatedAt as Date).toISOString(),
+        // };
       } catch (error) {
         return handleGqlError({ error });
       }

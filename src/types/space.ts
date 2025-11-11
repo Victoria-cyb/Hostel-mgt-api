@@ -30,10 +30,10 @@ export interface Space {
   updatedAt?: string;
   createdById: string;
   createdBy: SimpleUser;
-  hostels: Hostel[];
-  users: SpaceUser[];
-  stayTypes: StayType[];
-  classes: Class[];
+  hostels?: Hostel[];
+  users?: SpaceUser[];
+  stayTypes?: StayType[];
+  classes?: Class[];
 }
 
 export interface SimpleSpaceInfo {
@@ -64,7 +64,7 @@ export interface SpaceUser {
 export interface Class {
   id: string;
   space?: Space;
-  names: string[];
+  names?: string[];
   createdAt: string;
 }
 
