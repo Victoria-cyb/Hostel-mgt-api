@@ -36,6 +36,7 @@ class SpaceService {
       include: {
         createdBy: true,
         spaceUsers: true,
+        hostels: true,
       },
     });
 
