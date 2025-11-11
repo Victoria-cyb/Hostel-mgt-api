@@ -558,7 +558,7 @@ class ApplicationService {
       application: {
         ...alloc.application,
         status: alloc.application.status as ApplicationStatus,
-        allocations: alloc.application.allocations.map(mapAllocation),
+         allocations: (alloc.application.allocations ?? []).map(mapAllocation),
         startDate: alloc.application.startDate ?? null,
         endDate: alloc.application.endDate ?? null,
         createdAt: new Date(alloc.application.createdAt).toISOString(),
@@ -566,7 +566,7 @@ class ApplicationService {
           ? new Date(alloc.application.updatedAt).toISOString()
           : null,
       },
-      payments: alloc.payments.map(mapPayment),
+      payments: (alloc.payments ?? []).map(mapPayment),
       createdAt: new Date(alloc.createdAt).toISOString(),
     });
 
