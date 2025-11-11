@@ -23,7 +23,7 @@ type Space {
   createdAt: DateTime!
   updatedAt: DateTime
   hostels: [Hostel!]!
-  users: [SpaceUser!]!
+  users: [SpaceUser!]
   stayTypes: [StayType!]!
   classes: [Class!]!
   createdBy: SimpleUser!

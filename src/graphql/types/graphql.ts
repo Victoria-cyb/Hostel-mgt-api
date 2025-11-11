@@ -611,7 +611,7 @@ export type Space = {
   name: Scalars['String']['output'];
   stayTypes: Array<StayType>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
-  users: Array<SpaceUser>;
+  users?: Maybe<Array<SpaceUser>>;
 };
 
 export enum SpaceRole {
@@ -1036,7 +1036,7 @@ export type SpaceResolvers<ContextType = any, ParentType extends ResolversParent
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   stayTypes?: Resolver<Array<ResolversTypes['StayType']>, ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
-  users?: Resolver<Array<ResolversTypes['SpaceUser']>, ParentType, ContextType>;
+  users?: Resolver<Maybe<Array<ResolversTypes['SpaceUser']>>, ParentType, ContextType>;
 }>;
 
 export type SpaceUserResolvers<ContextType = any, ParentType extends ResolversParentTypes['SpaceUser'] = ResolversParentTypes['SpaceUser']> = ResolversObject<{
