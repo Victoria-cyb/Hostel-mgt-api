@@ -602,14 +602,14 @@ export type SimpleUser = {
 };
 
 export type Space = {
-  classes: Array<Class>;
+  classes?: Maybe<Array<Class>>;
   createdAt: Scalars['DateTime']['output'];
   createdBy: SimpleUser;
   createdById: Scalars['ID']['output'];
-  hostels: Array<Hostel>;
+  hostels?: Maybe<Array<Hostel>>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  stayTypes: Array<StayType>;
+  stayTypes?: Maybe<Array<StayType>>;
   updatedAt?: Maybe<Scalars['DateTime']['output']>;
   users?: Maybe<Array<SpaceUser>>;
 };
@@ -1027,14 +1027,14 @@ export type SimpleUserResolvers<ContextType = any, ParentType extends ResolversP
 }>;
 
 export type SpaceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Space'] = ResolversParentTypes['Space']> = ResolversObject<{
-  classes?: Resolver<Array<ResolversTypes['Class']>, ParentType, ContextType>;
+  classes?: Resolver<Maybe<Array<ResolversTypes['Class']>>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   createdBy?: Resolver<ResolversTypes['SimpleUser'], ParentType, ContextType>;
   createdById?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  hostels?: Resolver<Array<ResolversTypes['Hostel']>, ParentType, ContextType>;
+  hostels?: Resolver<Maybe<Array<ResolversTypes['Hostel']>>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  stayTypes?: Resolver<Array<ResolversTypes['StayType']>, ParentType, ContextType>;
+  stayTypes?: Resolver<Maybe<Array<ResolversTypes['StayType']>>, ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   users?: Resolver<Maybe<Array<ResolversTypes['SpaceUser']>>, ParentType, ContextType>;
 }>;

@@ -62,7 +62,7 @@ class SpaceService {
 
     return {
       ...newSpace,
-        
+    
         classes: (newSpace.classes ?? []).map(c => ({
     id: c.id,
     space: undefined,

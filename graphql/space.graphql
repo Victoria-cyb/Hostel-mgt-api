@@ -22,10 +22,10 @@ type Space {
   name: String!
   createdAt: DateTime!
   updatedAt: DateTime
-  hostels: [Hostel!]!
+  hostels: [Hostel!]
   users: [SpaceUser!]
-  stayTypes: [StayType!]!
-  classes: [Class!]!
+  stayTypes: [StayType!]
+  classes: [Class!]
   createdBy: SimpleUser!
   createdById: ID!
 }
