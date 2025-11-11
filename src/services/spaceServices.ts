@@ -37,6 +37,7 @@ class SpaceService {
         createdBy: true,
         spaceUsers: true,
         hostels: true,
+      
       },
     });
 
@@ -56,6 +57,8 @@ class SpaceService {
 
     return {
       ...newSpace,
+       users: newSpace.spaceUsers ?? [], // map DB field to GraphQL field
+       hostels: newSpace.hostels ?? [],
       createdAt:
         newSpace.createdAt instanceof Date
           ? newSpace.createdAt.toISOString()
