@@ -38,7 +38,7 @@ class SpaceService {
       },
       include: {
         createdBy: true,
-        spaceUsers: true,
+        // spaceUsers: true,
        classes: true,
        hostels: true
 
@@ -62,7 +62,6 @@ class SpaceService {
 
     return {
       ...newSpace,
-    
         classes: (newSpace.classes ?? []).map(c => ({
     id: c.id,
     space: undefined,
